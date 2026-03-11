@@ -4,9 +4,8 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-3.0.0-FF6B00?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.0.0-FF6B00?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-MVP--진행중-00E5A0?style=for-the-badge)
-![UMC](https://img.shields.io/badge/UMC-Plan파트-9D4EDD?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-00BFFF?style=for-the-badge)
 
 </div>
