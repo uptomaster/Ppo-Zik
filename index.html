@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💩 뽀직이</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0fff4; transition: background .8s; display: flex; justify-content: center; }
+  #app { width: 100%; max-width: 420px; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+
+  /* header */
+  .header { padding: 44px 18px 10px; background: white; border-bottom: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+  .header h1 { font-size: 22px; font-weight: 900; color: #1e293b; }
+  .header p  { font-size: 11px; color: #94a3b8; }
+  .today-badge { background: #f1f5f9; border-radius: 10px; padding: 5px 11px; font-size: 12px; font-weight: 700; color: #64748b; }
+
+  /* content */
+  .content { flex: 1; overflow-y: auto; padding-bottom: 72px; }
+
+  /* tab panels */
+  .panel { display: none; padding: 12px 16px; }
+  .panel.active { display: block; }
+  #panel-timer { display: flex; flex-direction: column; align-items: center; padding-top: 10px; }
+
+  /* character */
+  #char-wrap { position: relative; width: 160px; height: 160px; display: flex; align-items: center; justify-content: center; }
+  #char-svg { transition: all .5s; }
+  .glow { transition: all .5s; }
+  .sweat { position: absolute; font-size: 13px; animation: sw 1.4s ease-in infinite; }
+  .steam-p { position: absolute; top: 4px; width: 6px; height: 14px; border-radius: 4px; background: #fb923c99; }
+
+  /* timer box */
+  #timer-box { margin: 0 16px; width: calc(100% - 32px); padding: 12px 0; border-radius: 18px; text-align: center; transition: all .5s; }
+  #timer-digits { font-family: monospace; font-size: 50px; font-weight: 900; transition: color .5s; }
+  #timer-label  { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+  /* progress */
+  #progress-wrap { margin: 8px 16px 0; width: calc(100% - 32px); height: 7px; border-radius: 7px; background: #f1f5f9; overflow: hidden; }
+  #progress-bar  { height: 100%; width: 0%; background: linear-gradient(to right, #4ade80, #fde047, #ef4444); border-radius: 7px; transition: width 1s linear; }
+
+  /* tip */
+  #tip-box { margin: 8px 16px 0; width: calc(100% - 32px); padding: 9px 13px; border-radius: 14px; background: white; border: 1.5px solid #f1f5f9; }
+  #tip-box .label { font-size: 10px; font-weight: 700; color: #94a3b8; margin-bottom: 3px; }
+  #tip-text { font-size: 12px; color: #475569; line-height: 1.6; }
+
+  /* buttons */
+  #btn-wrap { margin: 10px 16px 0; width: calc(100% - 32px); }
+  .big-btn { width: 100%; padding: 15px 0; border-radius: 16px; color: white; font-weight: 900; font-size: 17px; border: none; cursor: pointer; }
+  #btn-start { background: linear-gradient(135deg,#4ade80,#22c55e); box-shadow: 0 4px 18px #4ade8066; }
+  #btn-stop  { background: linear-gradient(135deg,#f97316,#ef4444); box-shadow: 0 4px 18px #ef444466; display: none; }
+
+  /* last record */
+  #last-record { margin: 8px 16px 0; width: calc(100% - 32px); padding: 9px 13px; border-radius: 14px; background: white; border: 1.5px solid #f1f5f9; display: none; align-items: center; gap: 9px; }
+  #last-record .emoji { font-size: 20px; }
+  #last-record .title { font-size: 11px; font-weight: 700; color: #374151; }
+  #last-record .sub   { font-size: 10px; color: #94a3b8; }
+
+  /* bottom nav */
+  .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 420px; background: white; border-top: 1.5px solid #f1f5f9; display: flex; padding-bottom: 6px; z-index: 50; }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 9px 0; border: none; cursor: pointer; background: none; color: #94a3b8; font-weight: 500; transition: color .2s; font-size: 10px; }
+  .nav-btn .ico { font-size: 19px; }
+  .nav-btn.active { color: #f97316; font-weight: 800; }
+
+  /* warning banner */
+  #warning { position: fixed; top: 0; left: 50%; transform: translateX(-50%) translateY(-100%); width: 100%; max-width: 420px; z-index: 70; background: linear-gradient(135deg,#ef4444,#7f1d1d); color: white; font-weight: 700; font-size: 13px; padding: 14px; text-align: center; transition: transform .3s; }
+  #warning.show { transform: translateX(-50%) translateY(0); }
+
+  /* calendar */
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-nav button { background: #f1f5f9; border: none; border-radius: 10px; padding: 6px 14px; cursor: pointer; font-weight: 700; font-size: 18px; }
+  .cal-nav span { font-weight: 900; font-size: 17px; color: #1e293b; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .cal-head { text-align: center; font-size: 11px; font-weight: 700; color: #94a3b8; padding-bottom: 4px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border: 2px solid transparent; position: relative; font-size: 12px; font-weight: 600; color: #374151; }
+  .cal-cell.today { background: #fef08a; border-color: #eab308; font-weight: 900; color: #854d0e; }
+  .cal-cell.has-rec { background: #dcfce7; }
+  .cal-cell.has-danger { background: #fee2e2; }
+  .cal-cell .rec-cnt { font-size: 9px; }
+  .cal-cell .danger-ico { position: absolute; top: 1px; right: 2px; font-size: 8px; }
+
+  /* stats */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-card { background: white; border-radius: 14px; padding: 11px 13px; }
+  .stat-val { font-size: 20px; font-weight: 900; }
+  .stat-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .chart-box { background: white; border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .chart-title { font-weight: 800; font-size: 12px; color: #374151; margin-bottom: 10px; }
+  .bar-wrap { display: flex; align-items: flex-end; gap: 6px; height: 72px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; }
+  .bar-col .bar { width: 100%; border-radius: 5px; transition: height .5s; }
+  .bar-col .bl { font-size: 9px; color: #94a3b8; font-weight: 600; }
+  .bristol-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .bristol-row .be { font-size: 14px; width: 20px; }
+  .bristol-row .bl { font-size: 10px; color: #64748b; width: 28px; }
+  .bristol-track { flex: 1; height: 7px; border-radius: 4px; background: #f1f5f9; overflow: hidden; }
+  .bristol-fill  { height: 100%; border-radius: 4px; transition: width .5s; }
+  .bristol-cnt   { font-size: 10px; color: #94a3b8; width: 16px; text-align: right; }
+
+  /* tips */
+  .tip-card { background: white; border-radius: 14px; padding: 13px 15px; margin-bottom: 9px; border: 1.5px solid #f1f5f9; }
+  .tip-card h3 { font-weight: 800; font-size: 12px; color: #374151; margin-bottom: 5px; }
+  .tip-card p  { font-size: 11px; color: #64748b; line-height: 1.7; }
+
+  /* modal */
+  #modal-overlay { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.55); display: none; }
+  #modal-overlay.show { display: flex; }
+  #modal { width: 100%; max-width: 420px; background: white; border-radius: 24px 24px 0 0; padding: 22px 18px 32px; }
+  #modal h2 { text-align: center; font-size: 20px; font-weight: 900; color: #1e293b; }
+  #modal .sub { text-align: center; font-size: 12px; color: #94a3b8; margin-top: 3px; margin-bottom: 14px; }
+  .modal-sec-title { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 7px; }
+  .bristol-sel { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin-bottom: 5px; }
+  .bristol-btn { display: flex; flex-direction: column; align-items: center; padding: 5px 2px; border-radius: 9px; border: 2px solid #f1f5f9; background: #f8fafc; cursor: pointer; font-size: 8px; color: #64748b; }
+  .bristol-btn .be { font-size: 18px; }
+  .bristol-btn.sel { background: #fff7ed; }
+  #bristol-desc { font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 12px; min-height: 16px; }
+  .color-sel { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
+  .color-btn { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: all .15s; }
+  .color-btn.sel { transform: scale(1.2); border-color: #3b82f6; box-shadow: 0 0 0 2px white, 0 0 0 4px #3b82f6; }
+  #modal-note { width: 100%; padding: 9px 12px; border-radius: 12px; border: 2px solid #e2e8f0; resize: none; height: 48px; font-size: 12px; outline: none; margin-bottom: 10px; font-family: inherit; }
+  #modal-save { width: 100%; padding: 13px 0; border-radius: 14px; background: linear-gradient(135deg,#f97316,#ef4444); color: white; font-weight: 900; font-size: 16px; border: none; cursor: pointer; }
+
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+  @keyframes shk { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+  @keyframes sw  { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(22px);opacity:0} }
+  @keyframes stm { 0%{opacity:.7;transform:translateY(0) scaleX(1)} 100%{opacity:0;transform:translateY(-18px) scaleX(1.6)} }
+  @keyframes gl  { 0%,100%{opacity:.4} 50%{opacity:.9} }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- warning -->
+  <div id="warning"></div>
+
+  <!-- header -->
+  <div class="header">
+    <div><h1>💩 뽀직이</h1><p>건강한 화장실 습관</p></div>
+    <div class="today-badge" id="today-cnt">오늘 0회</div>
+  </div>
+
+  <!-- content -->
+  <div class="content">
+
+    <!-- TIMER -->
+    <div id="panel-timer" class="panel active">
+      <div id="char-wrap">
+        <div id="glow-el" class="glow" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:90px;height:18px;border-radius:50%;animation:gl 2s ease infinite;"></div>
+        <div id="steam-wrap"></div>
+        <svg id="char-svg" width="130" height="145" viewBox="0 0 130 145">
+          <ellipse cx="65" cy="130" rx="52" ry="11" fill="#cbd5e1"/>
+          <rect x="22" y="112" width="86" height="20" rx="10" fill="#94a3b8"/>
+          <ellipse cx="65" cy="112" rx="42" ry="9" fill="#cbd5e1"/>
+          <ellipse id="b0" cx="65" cy="88" rx="34" ry="27"/>
+          <ellipse id="b1" cx="65" cy="64" rx="24" ry="20"/>
+          <ellipse id="b2" cx="65" cy="47" rx="16" ry="14"/>
+          <ellipse id="b3" cx="65" cy="35" rx="9"  ry="8"/>
+          <ellipse cx="53" cy="78" rx="9" ry="7" fill="white" opacity="0.25"/>
+          <g id="eyes-normal">
+            <circle cx="50" cy="74" r="5.5" fill="#1e293b"/>
+            <circle cx="80" cy="74" r="5.5" fill="#1e293b"/>
+            <circle cx="52" cy="72" r="2"   fill="white"/>
+            <circle cx="82" cy="72" r="2"   fill="white"/>
+          </g>
+          <g id="brows" style="display:none">
+            <line x1="44" y1="67" x2="56" y2="64" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="74" y1="64" x2="86" y2="67" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
+          <g id="eyes-dead" style="display:none">
+            <text x="49" y="77" font-size="14" text-anchor="middle" fill="#1e293b">✕</text>
+            <text x="79" y="77" font-size="14" text-anchor="middle" fill="#1e293b">✕</text>
+          </g>
+          <path id="mouth" d="M 46 79 Q 60 90 74 79" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <line id="mouth-neutral" x1="50" y1="81" x2="80" y2="81" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" style="display:none"/>
+          <ellipse id="leg-l" cx="47" cy="110" rx="11" ry="6"/>
+          <ellipse id="leg-r" cx="83" cy="110" rx="11" ry="6"/>
+        </svg>
+        <div id="sweat-wrap"></div>
+      </div>
+
+      <div id="timer-box">
+        <div id="timer-digits">00:00</div>
+        <div id="timer-label">쾌적 😊</div>
+      </div>
+
+      <div id="progress-wrap"><div id="progress-bar"></div></div>
+
+      <div id="tip-box">
+        <div class="label">💡 건강 팁</div>
+        <div id="tip-text"></div>
+      </div>
+
+      <div id="btn-wrap">
+        <button class="big-btn" id="btn-start" onclick="startTimer()">🚽 변기에 앉았어요!</button>
+        <button class="big-btn" id="btn-stop"  onclick="stopTimer()">✅ 끝났어요!</button>
+      </div>
+
+      <div id="last-record">
+        <span class="emoji" id="last-emoji">💩</span>
+        <div>
+          <div class="title">마지막 기록</div>
+          <div class="sub" id="last-sub"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="panel-calendar" class="panel">
+      <div class="cal-nav">
+        <button onclick="calPrev()">‹</button>
+        <span id="cal-title"></span>
+        <button onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid" id="cal-heads"></div>
+      <div class="cal-grid" id="cal-cells"></div>
+    </div>
+
+    <!-- STATS -->
+    <div id="panel-stats" class="panel">
+      <div class="stats-grid" id="stats-cards"></div>
+      <div class="chart-box">
+        <div class="chart-title">📊 최근 7일 평균 시간</div>
+        <div class="bar-wrap" id="bar-chart"></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">💩 브리스톨 분포</div>
+        <div id="bristol-chart"></div>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div id="panel-tips" class="panel">
+      <div style="font-weight:900;font-size:15px;color:#1e293b;margin-bottom:12px">🌿 건강 가이드</div>
+      <div class="tip-card"><h3>⏱️ 화장실 시간</h3><p>배변은 보통 1~2분이면 충분해요. 3분 이상 앉아 있으면 항문 혈관에 압박이 가해져 치질·항문 열상 위험이 높아져요.</p></div>
+      <div class="tip-card"><h3>🚰 수분 섭취</h3><p>하루 물 1.5~2L를 충분히 마시면 변이 부드러워져 변비를 예방해요. 아침 공복 따뜻한 물 한 잔이 특히 효과적이에요.</p></div>
+      <div class="tip-card"><h3>🥦 식이섬유</h3><p>하루 25~30g의 식이섬유(채소·과일·통곡물)를 섭취하면 장 운동이 활발해지고 변이 규칙적으로 나와요.</p></div>
+      <div class="tip-card"><h3>🏃 운동</h3><p>걷기·달리기·수영 등 유산소 운동은 장 운동을 촉진해요. 하루 30분, 주 5회가 권장돼요.</p></div>
+      <div class="tip-card"><h3>📵 스마트폰 금지</h3><p>화장실에서 스마트폰을 쓰면 무의식적으로 오래 앉아 치질 위험이 커져요. 내려두세요!</p></div>
+      <div class="tip-card"><h3>🏥 전문의 상담</h3><p>변에 피가 섞이거나 변비가 2주 이상 지속되면 대장항문과를 꼭 방문하세요.</p></div>
+    </div>
+
+  </div>
+
+  <!-- bottom nav -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchTab('timer',this)"><span class="ico">🚽</span>타이머</button>
+    <button class="nav-btn" onclick="switchTab('calendar',this)"><span class="ico">📅</span>달력</button>
+    <button class="nav-btn" onclick="switchTab('stats',this)"><span class="ico">📊</span>통계</button>
+    <button class="nav-btn" onclick="switchTab('tips',this)"><span class="ico">💡</span>건강팁</button>
+  </nav>
+
+  <!-- record modal -->
+  <div id="modal-overlay" onclick="closeModal(event)">
+    <div id="modal">
+      <h2>기록 저장 💾</h2>
+      <div class="sub" id="modal-sub"></div>
+      <div class="modal-sec-title">변 형태 (브리스톨 척도)</div>
+      <div class="bristol-sel" id="bristol-sel"></div>
+      <div id="bristol-desc"></div>
+      <div class="modal-sec-title">변 색상</div>
+      <div class="color-sel" id="color-sel"></div>
+      <textarea id="modal-note" placeholder="메모 (선택)..."></textarea>
+      <button id="modal-save" onclick="saveRecord()">저장하기 ✅</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const STAGES = [
+  { time:0,   color:"#6bcb77", bg:"#f0fff4", label:"쾌적 😊",      face:"happy",   sweat:0, shake:false, steam:false },
+  { time:60,  color:"#a8e063", bg:"#f6ffe0", label:"괜찮음 🙂",    face:"slight",  sweat:0, shake:false, steam:false },
+  { time:120, color:"#ffd93d", bg:"#fffde0", label:"슬슬 위험 😐", face:"neutral", sweat:1, shake:false, steam:false },
+  { time:180, color:"#ff9a3c", bg:"#fff5e0", label:"위험 😰",      face:"worry",   sweat:2, shake:false, steam:true  },
+  { time:300, color:"#ff4d4d", bg:"#fff0f0", label:"🚨 치질 경고", face:"panic",   sweat:3, shake:true,  steam:true  },
+  { time:420, color:"#7b0000", bg:"#2a0000", label:"☠️ 매우 위험", face:"dead",    sweat:3, shake:true,  steam:true  },
+];
+const BRISTOL = [
+  {id:1,emoji:"🪨",label:"1형",desc:"딱딱한 덩어리",color:"#92400e"},
+  {id:2,emoji:"🫘",label:"2형",desc:"소시지형 딱딱",color:"#a16207"},
+  {id:3,emoji:"🌭",label:"3형",desc:"균열 있는 소시지",color:"#b45309"},
+  {id:4,emoji:"🍌",label:"4형",desc:"매끈한 소시지",color:"#16a34a"},
+  {id:5,emoji:"🫐",label:"5형",desc:"부드러운 덩어리",color:"#ca8a04"},
+  {id:6,emoji:"💧",label:"6형",desc:"흐릿한 조각",color:"#d97706"},
+  {id:7,emoji:"🌊",label:"7형",desc:"완전 액체",color:"#dc2626"},
+];
+const COLORS = [
+  {id:"brown",hex:"#92400e"},{id:"yellow",hex:"#ca8a04"},{id:"green",hex:"#16a34a"},
+  {id:"black",hex:"#1e1e1e"},{id:"red",hex:"#dc2626"},{id:"white",hex:"#d4d4d4"},
+];
+const TIPS = [
+  "변의가 느껴질 때만 앉으세요! 억지로 앉아있지 마세요.",
+  "하루 물 2L 이상 마시면 변비 예방에 좋아요.",
+  "발을 약간 높이면 더 자연스럽게 배변할 수 있어요 🦶",
+  "식이섬유가 풍부한 채소·과일을 매일 드세요.",
+  "스마트폰을 내려두면 화장실 시간이 짧아져요 📵",
+  "3분 이상이면 치질·항문 찢어짐 위험이 올라가요.",
+];
+const MOUTHS = {
+  happy:  "M 46 79 Q 60 90 74 79",
+  slight: "M 49 80 Q 60 87 71 80",
+  worry:  "M 48 84 Q 60 77 72 84",
+  panic:  "M 45 86 Q 60 76 75 86",
+  dead:   "M 47 82 L 52 79 L 57 83 L 62 79 L 67 83 L 72 79",
+};
+
+let elapsed=0, running=false, interval=null, lastWarnAt=0, tipIdx=0, tipTimer=null;
+let records=[], selBristol=4, selColor="brown", calYear, calMonth;
+
+const fmt = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+// ── timer ──
+function startTimer(){
+  elapsed=0; lastWarnAt=0;
+  running=true;
+  document.getElementById('btn-start').style.display='none';
+  document.getElementById('btn-stop').style.display='block';
+  interval=setInterval(tick,1000);
+  updateChar();
+}
+function stopTimer(){
+  running=false; clearInterval(interval);
+  document.getElementById('btn-start').style.display='block';
+  document.getElementById('btn-stop').style.display='none';
+  openModal();
+}
+function tick(){
+  elapsed++;
+  updateTimer();
+  updateChar();
+  checkWarning();
+}
+function updateTimer(){
+  const stage=getStage();
+  document.getElementById('timer-digits').textContent=fmt(elapsed);
+  document.getElementById('timer-digits').style.color=stage.color;
+  document.getElementById('timer-digits').style.textShadow=`0 0 20px ${stage.color}88`;
+  document.getElementById('timer-label').textContent=stage.label;
+  document.getElementById('timer-label').style.color=stage.color;
+  document.getElementById('timer-box').style.background=`linear-gradient(135deg,${stage.color}22,${stage.color}44)`;
+  document.getElementById('timer-box').style.border=`2.5px solid ${stage.color}66`;
+  document.getElementById('progress-bar').style.width=`${Math.min(elapsed/420*100,100)}%`;
+  document.body.style.background = elapsed>=420?"#1a0000":stage.bg;
+  document.getElementById('app').style.background = elapsed>=420?"#1a0000":stage.bg;
+}
+function getStage(){ return STAGES.reduce((a,s)=>elapsed>=s.time?s:a,STAGES[0]); }
+
+// ── character ──
+function updateChar(){
+  const s=getStage();
+  const bodyEls=['b0','b1','b2','b3','leg-l','leg-r'];
+  bodyEls.forEach(id=>{ const el=document.getElementById(id); if(el){el.style.fill=s.color;el.setAttribute('fill',s.color);} });
+  document.getElementById('glow-el').style.background=`radial-gradient(ellipse,${s.color}99 0%,transparent 70%)`;
+
+  // face
+  const isNeutral=s.face==='neutral';
+  const isDead=s.face==='dead';
+  document.getElementById('eyes-normal').style.display=isDead?'none':'';
+  document.getElementById('eyes-dead').style.display=isDead?'':'none';
+  document.getElementById('brows').style.display=(s.face==='worry'||s.face==='panic')?'':'none';
+  const mouthPath=document.getElementById('mouth');
+  const mouthLine=document.getElementById('mouth-neutral');
+  if(isNeutral){ mouthPath.style.display='none'; mouthLine.style.display=''; }
+  else if(isDead){ mouthPath.style.display=''; mouthLine.style.display='none'; mouthPath.setAttribute('d',MOUTHS.dead); }
+  else{ mouthPath.style.display=''; mouthLine.style.display='none'; if(MOUTHS[s.face]) mouthPath.setAttribute('d',MOUTHS[s.face]); }
+
+  // animation
+  document.getElementById('char-svg').style.animation = s.shake ? 'shk .25s linear infinite' : 'bob 2.2s ease-in-out infinite';
+
+  // sweat
+  const sw=document.getElementById('sweat-wrap'); sw.innerHTML='';
+  for(let i=0;i<s.sweat;i++){
+    const d=document.createElement('div');
+    d.className='sweat';
+    d.textContent='💧';
+    d.style.top=(28+i*18)+'px';
+    d.style.right=(i%2===0?4:16)+'px';
+    d.style.animationDelay=(i*0.45)+'s';
+    sw.appendChild(d);
+  }
+  // steam
+  const stm=document.getElementById('steam-wrap'); stm.innerHTML='';
+  if(s.steam){
+    for(let i=0;i<3;i++){
+      const d=document.createElement('div');
+      d.className='steam-p';
+      d.style.left=(58+i*15)+'px';
+      d.style.animationDelay=(i*0.35)+'s';
+      d.style.animation=`stm 1.2s ease-out ${i*0.35}s infinite`;
+      stm.appendChild(d);
+    }
+  }
+}
+
+// ── warning ──
+function checkWarning(){
+  const W=[
+    {t:180,msg:"⚠️ 3분이 지났어요!\n항문 압력이 높아지고 있어요."},
+    {t:300,msg:"🚨 5분 초과!\n치질 위험이 매우 높아요.\n지금 바로 일어나세요!"},
+    {t:420,msg:"☠️ 7분 이상!\n즉시 일어나세요!"},
+  ];
+  const w=W.find(w=>elapsed===w.t&&lastWarnAt!==w.t);
+  if(!w) return;
+  lastWarnAt=w.t;
+  const el=document.getElementById('warning');
+  el.innerHTML=w.msg.split('\n').map(l=>`<div>${l}</div>`).join('');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+// ── tips ──
+function initTips(){
+  document.getElementById('tip-text').textContent=TIPS[0];
+  tipTimer=setInterval(()=>{
+    tipIdx=(tipIdx+1)%TIPS.length;
+    document.getElementById('tip-text').textContent=TIPS[tipIdx];
+  },6000);
+}
+
+// ── tabs ──
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const panel=document.getElementById('panel-'+name);
+  if(panel) panel.classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='calendar') renderCalendar();
+  if(name==='stats')    renderStats();
+}
+
+// ── modal ──
+function openModal(){
+  // bristol buttons
+  const sel=document.getElementById('bristol-sel'); sel.innerHTML='';
+  BRISTOL.forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='bristol-btn'+(selBristol===b.id?' sel':'');
+    btn.style.borderColor=selBristol===b.id?b.color:'#f1f5f9';
+    btn.innerHTML=`<span class="be">${b.emoji}</span>${b.label}`;
+    btn.onclick=()=>{
+      selBristol=b.id;
+      document.querySelectorAll('.bristol-btn').forEach((x,i)=>{
+        x.classList.toggle('sel',i===b.id-1);
+        x.style.borderColor=i===b.id-1?BRISTOL[i].color:'#f1f5f9';
+      });
+      document.getElementById('bristol-desc').textContent=b.desc;
+    };
+    sel.appendChild(btn);
+  });
+  document.getElementById('bristol-desc').textContent=BRISTOL.find(b=>b.id===selBristol)?.desc||'';
+
+  // color buttons
+  const csel=document.getElementById('color-sel'); csel.innerHTML='';
+  COLORS.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='color-btn'+(selColor===c.id?' sel':'');
+    btn.style.background=c.hex;
+    btn.onclick=()=>{
+      selColor=c.id;
+      document.querySelectorAll('.color-btn').forEach(x=>x.classList.remove('sel'));
+      btn.classList.add('sel');
+    };
+    csel.appendChild(btn);
+  });
+
+  document.getElementById('modal-sub').innerHTML=`소요 시간: <span style="font-weight:700;color:${elapsed>=300?'#ef4444':'#22c55e'}">${fmt(elapsed)}</span>${elapsed>=300?' 🚨':''}`;
+  document.getElementById('modal-note').value='';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal(e){ if(e.target===document.getElementById('modal-overlay')) document.getElementById('modal-overlay').classList.remove('show'); }
+function saveRecord(){
+  const now=new Date();
+  const rec={
+    elapsed, bristolId:selBristol, colorId:selColor,
+    note:document.getElementById('modal-note').value,
+    ts:now.toISOString(),
+    date:now.toISOString().slice(0,10),
+    time:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+  };
+  records.unshift(rec);
+  document.getElementById('modal-overlay').classList.remove('show');
+  elapsed=0; updateTimer();
+  updateTodayCount();
+  updateLastRecord();
+}
+function updateTodayCount(){
+  const cnt=records.filter(r=>r.date===todayISO()).length;
+  document.getElementById('today-cnt').textContent=`오늘 ${cnt}회`;
+}
+function updateLastRecord(){
+  if(!records.length) return;
+  const r=records[0];
+  const b=BRISTOL.find(x=>x.id=LO==r.bristolId);
+  document.getElementById('last-record').style.display='flex';
+  document.getElementById('last-emoji').textContent=b?.emoji||'💩';
+  document.getElementById('last-sub').textContent=`${r.time} · ${fmt(r.elapsed)} · ${b?.desc||''}`;
+}
+
+// ── calendar ──
+function initCal(){ const d=new Date(); calYear=d.getFullYear(); calMonth=d.getMonth(); }
+function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+function renderCalendar(){
+  document.getElementById('cal-title').textContent=`${calYear}년 ${calMonth+1}월`;
+  const heads=document.getElementById('cal-heads');
+  heads.innerHTML=['일','월','화','수','목','금','토'].map(d=>`<div class="cal-head">${d}</div>`).join('');
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const days=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date();
+  const dayMap={};
+  records.forEach(r=>{
+    const d=new Date(r.ts);
+    if(d.getFullYear()===calYear&&d.getMonth()===calMonth){
+      const k=d.getDate(); if(!dayMap[k])dayMap[k]=[]; dayMap[k].push(r);
+    }
+  });
+  let html='';
+  for(let i=0;i<firstDay;i++) html+='<div></div>';
+  for(let d=1;d<=days;d++){
+    const recs=dayMap[d]||[];
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    const danger=recs.some(r=>r.elapsed>=300);
+    const cls='cal-cell'+(isToday?' today':recs.length?(danger?' has-danger':' has-rec'):'');
+    html+=`<div class="${cls}">${d}${recs.length?`<span class="rec-cnt">${recs.length}회</span>`:''}${danger?'<span class="danger-ico">⚠️</span>':''}</div>`;
+  }
+  document.getElementById('cal-cells').innerHTML=html;
+}
+
+// ── stats ──
+function renderStats(){
+  const total=records.length;
+  const avgTime=total?Math.round(records.reduce((s,r)=>s+r.elapsed,0)/total):0;
+  const dangerCnt=records.filter(r=>r.elapsed>=300).length;
+  const cnt={};records.forEach(r=>{cnt[r.bristolId]=(cnt[r.bristolId]||0)+1;});
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  const bestType=top?BRISTOL.find(b=>b.id===Number(top[0])):null;
+  document.getElementById('stats-cards').innerHTML=[
+    {l:"총 세션",v:total+"회",c:"#4ade80"},
+    {l:"평균 시간",v:fmt(avgTime),c:"#60a5fa"},
+    {l:"위험 횟수",v:dangerCnt+"회",c:"#f87171"},
+    {l:"최다 타입",v:bestType?bestType.emoji+" "+bestType.label:"없음",c:"#c084fc"},
+  ].map(x=>`<div class="stat-card" style="border:2px solid ${x.c}44"><div class="stat-val" style="color:${x.c}">${x.v}</div><div class="stat-lbl">${x.l}</div></div>`).join('');
+
+  // bar chart
+  const days=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().slice(0,10);});
+  const barData=days.map(iso=>{
+    const recs=records.filter(r=>r.date===iso);
+    const avg=recs.length?Math.round(recs.reduce((s,r)=>s+r.elapsed,0)/recs.length):0;
+    const d=new Date(iso); const label=`${d.getMonth()+1}/${d.getDate()}`;
+    return{label,avg,danger:recs.filter(r=>r.elapsed>=300).length};
+  });
+  const maxAvg=Math.max(...barData.map(d=>d.avg),60);
+  document.getElementById('bar-chart').innerHTML=barData.map(d=>`
+    <div class="bar-col">
+      <div class="bar" style="height:${d.avg?Math.max((d.avg/maxAvg)*60,4):3}px;background:${d.danger?'linear-gradient(to top,#ef4444,#fb923c)':d.avg?'linear-gradient(to top,#4ade80,#22d3ee)':'#e2e8f0'}"></div>
+      <div class="bl">${d.label}</div>
+    </div>`).join('');
+
+  // bristol chart
+  document.getElementById('bristol-chart').innerHTML=BRISTOL.map(b=>{
+    const c=records.filter(r=>r.bristolId===b.id).length;
+    const pct=total?c/total:0;
+    return`<div class="bristol-row"><span class="be">${b.emoji}</span><span class="bl">${b.label}</span><div class="bristol-track"><div class="bristol-fill" style="width:${pct*100}%;background:${b.color}"></div></div><span class="bristol-cnt">${c}</span></div>`;
+  }).join('');
+}
+
+// ── init ──
+initCal();
+initTips();
+updateTimer();
+updateChar();
+</script>
+</body>
+</html>

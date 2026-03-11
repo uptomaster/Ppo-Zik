@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>뽀직이 v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900;1000&family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#07050F;
+  --bg2:#0D0A1C;
+  --card:#131025;
+  --card2:#1A1535;
+  --card3:#201B40;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --text:#F4EFFF;
+  --muted:rgba(244,239,255,0.42);
+  --muted2:rgba(244,239,255,0.22);
+  --orange:#FF6B00;
+  --orange2:#FF9A3C;
+  --yellow:#FFD60A;
+  --pink:#FF2D78;
+  --pink2:#FF6B9D;
+  --blue:#00BFFF;
+  --blue2:#60DFFF;
+  --green:#00E5A0;
+  --green2:#7FFFD4;
+  --purple:#9D4EDD;
+  --purple2:#C77DFF;
+  --red:#FF3B30;
+}
+
+body{min-height:100vh;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;overflow:hidden;position:relative;}
+
+/* Animated mesh background */
+.bg-mesh{position:fixed;inset:0;z-index:0;overflow:hidden;}
+.bg-mesh::before{
+  content:'';position:absolute;inset:-50%;
+  background:conic-gradient(from 0deg at 30% 40%,
+    rgba(255,107,0,0.06) 0deg,transparent 60deg,
+    rgba(157,78,221,0.08) 120deg,transparent 180deg,
+    rgba(0,191,255,0.06) 240deg,transparent 300deg,
+    rgba(255,45,120,0.05) 360deg);
+  animation:mesh-spin 25s linear infinite;
+}
+.bg-mesh::after{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 25%,rgba(255,107,0,0.09) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 45% at 80% 70%,rgba(157,78,221,0.1) 0%,transparent 55%),
+    radial-gradient(ellipse 45% 55% at 60% 30%,rgba(0,191,255,0.06) 0%,transparent 50%),
+    radial-gradient(ellipse 35% 40% at 40% 80%,rgba(0,229,160,0.06) 0%,transparent 50%);
+}
+.bg-dots{
+  position:fixed;inset:0;z-index:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);
+  background-size:24px 24px;
+  pointer-events:none;
+}
+
+/* ══ PHONE ══════════════════════════════════════════════ */
+.phone-outer{position:relative;z-index:1;width:393px;height:852px;flex-shrink:0;}
+.phone-bezel{
+  position:absolute;inset:0;border-radius:54px;
+  background:linear-gradient(160deg,#1e1640 0%,#0f0a20 50%,#080514 100%);
+  box-shadow:
+    0 0 0 1px rgba(157,78,221,0.35),
+    0 0 0 2px rgba(0,0,0,0.95),
+    0 50px 160px rgba(0,0,0,1),
+    0 10px 40px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(200,160,255,0.18),
+    0 0 100px rgba(157,78,221,0.08),
+    0 0 40px rgba(255,107,0,0.05);
+}
+.phone-btn-vol-up   {position:absolute;left:-3px;top:160px;width:4px;height:36px;border-radius:2px 0 0 2px;background:#180e30;box-shadow:-1px 0 4px rgba(0,0,0,.6);}
+.phone-btn-vol-down {position:absolute;left:-3px;top:208px;width:4px;height:36px;border-radius:2px 0 0 2px;background:#180e30;box-shadow:-1px 0 4px rgba(0,0,0,.6);}
+.phone-btn-silent   {position:absolute;left:-3px;top:120px;width:4px;height:28px;border-radius:2px 0 0 2px;background:#180e30;box-shadow:-1px 0 4px rgba(0,0,0,.6);}
+.phone-btn-power    {position:absolute;right:-3px;top:180px;width:4px;height:60px;border-radius:0 2px 2px 0;background:#180e30;box-shadow:1px 0 4px rgba(0,0,0,.6);}
+.phone-screen{position:absolute;top:8px;left:8px;right:8px;bottom:8px;border-radius:47px;overflow:hidden;background:var(--bg);}
+.phone-screen::after{content:'';position:absolute;inset:0;z-index:9999;pointer-events:none;background:linear-gradient(140deg,rgba(255,255,255,0.04) 0%,transparent 40%,transparent 60%,rgba(0,0,0,0.05) 100%);border-radius:47px;}
+
+/* ══ STATUS BAR ═════════════════════════════════════════ */
+.status-bar{position:absolute;top:0;left:0;right:0;height:54px;z-index:100;display:flex;align-items:flex-end;padding:0 28px 8px;justify-content:space-between;pointer-events:none;}
+.status-time{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.01em;}
+.status-icons{display:flex;align-items:center;gap:7px;}
+.sig{display:flex;align-items:flex-end;gap:1.5px;}
+.sig span{display:block;width:3px;border-radius:1px;background:var(--text);}
+.sig span:nth-child(1){height:4px}.sig span:nth-child(2){height:6px}.sig span:nth-child(3){height:8px}.sig span:nth-child(4){height:10px}
+.batt{width:26px;height:12px;border:1.5px solid rgba(244,239,255,0.6);border-radius:3px;position:relative;}
+.batt::before{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:2.5px;height:6px;background:rgba(244,239,255,0.6);border-radius:0 1px 1px 0;}
+.batt::after{content:'';position:absolute;inset:1.5px 1.5px 1.5px auto;width:14px;border-radius:1px;background:var(--green);}
+
+/* Dynamic Island */
+.di{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:101;width:126px;height:35px;border-radius:18px;background:#000;box-shadow:0 0 0 1px rgba(255,255,255,0.07),0 0 24px rgba(157,78,221,0.2);display:flex;align-items:center;justify-content:center;gap:8px;}
+.di-cam{width:11px;height:11px;border-radius:50%;background:#0a0812;border:1.5px solid #050408;position:relative;}
+.di-cam::after{content:'';position:absolute;inset:2px;border-radius:50%;background:#081018;box-shadow:0 0 4px rgba(0,191,255,0.3);}
+.di-dot{width:8px;height:8px;border-radius:50%;background:#060410;}
+
+/* ══ APP ════════════════════════════════════════════════ */
+#app{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;}
+.scroll-body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:90px;}
+.scroll-body::-webkit-scrollbar{display:none}
+
+/* ══ TAB BAR ════════════════════════════════════════════ */
+.tab-bar{
+  position:absolute;bottom:0;left:0;right:0;height:83px;
+  background:rgba(10,7,20,0.95);
+  backdrop-filter:blur(30px) saturate(200%);
+  border-top:1px solid rgba(157,78,221,0.2);
+  display:flex;padding:8px 4px 0;
+  box-shadow:0 -8px 30px rgba(0,0,0,0.4);
+}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:9.5px;font-weight:800;color:var(--muted);transition:all .22s;padding:0;}
+.tab-ico{font-size:22px;line-height:1;transition:all .22s;}
+.tab-item.active{color:var(--orange);}
+.tab-item.active .tab-ico{transform:scale(1.2) translateY(-2px);filter:drop-shadow(0 0 10px rgba(255,107,0,0.7));}
+.tab-lbl{font-size:9px;}
+
+/* ══ PANELS ═════════════════════════════════════════════ */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ══ PAGE HEADER ════════════════════════════════════════ */
+.page-header{padding:56px 20px 0;}
+.header-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0 16px;}
+.app-title{font-family:'Gaegu',cursive;font-size:34px;font-weight:700;color:var(--text);letter-spacing:-.01em;text-shadow:0 0 24px rgba(255,107,0,0.35);}
+.app-title span{color:var(--orange);}
+
+/* ══ GLASS CARD ═════════════════════════════════════════ */
+.g-card{
+  background:linear-gradient(145deg,rgba(26,21,53,0.95) 0%,rgba(19,16,37,0.9) 100%);
+  border-radius:24px;border:1px solid var(--border2);
+  box-shadow:0 4px 30px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.g-card-sm{border-radius:18px;}
+
+/* ══ PILL BADGE ═════════════════════════════════════════ */
+.pill{border-radius:20px;padding:6px 13px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:5px;}
+.pill-orange{background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.3);color:var(--orange);}
+.pill-green{background:rgba(0,229,160,0.12);border:1px solid rgba(0,229,160,0.25);color:var(--green);}
+.pill-pink{background:rgba(255,45,120,0.12);border:1px solid rgba(255,45,120,0.25);color:var(--pink);}
+.pill-blue{background:rgba(0,191,255,0.12);border:1px solid rgba(0,191,255,0.25);color:var(--blue);}
+
+/* Section label */
+.sec-lbl{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px;}
+
+/* ══════════════════════════════════════════════════════
+   PANEL 1 — TIMER
+══════════════════════════════════════════════════════ */
+.idle-section{padding:0 18px;}
+
+/* Score ring hero */
+.score-hero{
+  padding:22px 20px 18px;
+  display:flex;flex-direction:column;align-items:center;
+  position:relative;overflow:hidden;
+  margin-bottom:12px;
+}
+.score-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,229,160,0.06) 0%,transparent 70%);
+}
+.score-ring-wrap{position:relative;width:140px;height:140px;margin-bottom:12px;}
+.score-ring-wrap svg{position:absolute;inset:0;width:100%;height:100%;}
+.score-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  animation:idle-bob 3.5s ease-in-out infinite;
+}
+.score-num{font-size:36px;font-weight:900;letter-spacing:-.04em;line-height:1;text-shadow:0 0 20px currentColor;}
+.score-lbl-sm{font-size:10px;font-weight:700;color:var(--muted);margin-top:2px;}
+.score-title{font-size:16px;font-weight:900;color:var(--text);text-align:center;}
+.score-sub{font-size:12px;color:var(--muted);text-align:center;margin-top:4px;line-height:1.5;}
+
+/* Stat row */
+.stat-row{display:flex;gap:8px;margin-bottom:12px;}
+.stat-chip{flex:1;padding:12px 8px;text-align:center;border-radius:16px;}
+.stat-chip-val{font-size:19px;font-weight:900;font-variant-numeric:tabular-nums;}
+.stat-chip-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+
+/* START BUTTON */
+.btn-main{
+  width:100%;border:none;cursor:pointer;border-radius:20px;padding:19px 0;
+  font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;color:white;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:transform .13s,box-shadow .13s;position:relative;overflow:hidden;
+  letter-spacing:-.01em;
+}
+.btn-main::before{content:'';position:absolute;top:0;left:0;right:0;height:48%;background:linear-gradient(180deg,rgba(255,255,255,0.18) 0%,transparent 100%);border-radius:20px 20px 0 0;}
+.btn-main:active{transform:scale(.97);}
+.btn-start{background:linear-gradient(135deg,#FF9A3C 0%,#FF6B00 45%,#E03A00 100%);box-shadow:0 8px 32px rgba(255,107,0,0.5),0 2px 8px rgba(0,0,0,0.3);}
+.btn-stop{background:linear-gradient(135deg,#FF6B9D 0%,#FF2D78 45%,#C4005A 100%);box-shadow:0 8px 32px rgba(255,45,120,0.45);}
+.btn-blue{background:linear-gradient(135deg,#60DFFF 0%,#00BFFF 45%,#0080CC 100%);box-shadow:0 8px 32px rgba(0,191,255,0.4);}
+.btn-green{background:linear-gradient(135deg,#7FFFD4 0%,#00E5A0 45%,#009966 100%);box-shadow:0 8px 32px rgba(0,229,160,0.4);}
+
+/* ── TIMER active view ──────────────────────────────── */
+.char-stage{
+  padding:16px 18px 12px;margin-bottom:11px;
+  display:flex;flex-direction:column;align-items:center;
+  position:relative;overflow:hidden;
+}
+.char-stage-bg{position:absolute;inset:0;pointer-events:none;transition:background 1.2s;}
+.stage-badge{
+  display:flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;
+  font-size:11px;font-weight:800;margin-bottom:4px;border:1px solid transparent;
+  transition:all .5s;
+}
+.stage-dot{width:7px;height:7px;border-radius:50%;}
+
+#main-char{width:196px;height:214px;}
+
+.t-digits{font-size:58px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;transition:color .5s;text-shadow:0 0 40px currentColor;margin-top:4px;}
+.t-sublbl{font-size:13px;font-weight:700;color:var(--muted);margin-top:2px;transition:color .5s;}
+
+/* Progress track */
+.prog-track{width:100%;height:10px;border-radius:10px;background:rgba(255,255,255,0.07);position:relative;margin:12px 0 4px;overflow:visible;}
+.prog-fill{height:100%;border-radius:10px;width:0%;transition:width 1s linear,background .5s,box-shadow .5s;position:relative;}
+.prog-fill::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:currentColor;border:3px solid var(--bg);box-shadow:0 0 14px currentColor;}
+.prog-labels{display:flex;justify-content:space-between;margin-top:8px;}
+.prog-lbl{font-size:9.5px;font-weight:700;color:var(--muted2);}
+
+.stage-ticks{display:flex;gap:4px;margin-top:9px;}
+.s-tick{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,0.07);transition:all .4s;}
+
+.tip-chip{padding:12px 14px;margin-bottom:11px;display:flex;align-items:center;gap:10px;}
+.tip-ico{font-size:20px;}
+.tip-txt{font-size:12.5px;color:var(--muted);line-height:1.5;font-weight:600;flex:1;}
+
+/* ══════════════════════════════════════════════════════
+   PANEL 2 — HEALTH (Score + Meals + AI Diet)
+══════════════════════════════════════════════════════ */
+.health-section{padding:0 18px;}
+
+/* Today score card */
+.today-score-card{padding:20px 18px;margin-bottom:12px;position:relative;overflow:hidden;}
+.today-score-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,160,0.08) 0%,transparent 65%);}
+.tscore-row{display:flex;align-items:center;gap:14px;}
+.tscore-circle{
+  width:72px;height:72px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  position:relative;
+}
+.tscore-circle svg{position:absolute;inset:0;width:100%;height:100%;}
+.tscore-inner{position:relative;z-index:1;text-align:center;}
+.tscore-num{font-size:22px;font-weight:900;line-height:1;}
+.tscore-pt{font-size:8px;font-weight:700;color:var(--muted);}
+.tscore-info{flex:1;}
+.tscore-title{font-size:15px;font-weight:900;color:var(--text);}
+.tscore-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.score-bars{margin-top:12px;}
+.sbar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.sbar-lbl{font-size:11px;font-weight:700;color:var(--muted);min-width:52px;}
+.sbar-track{flex:1;height:7px;border-radius:7px;background:rgba(255,255,255,0.07);overflow:hidden;}
+.sbar-fill{height:100%;border-radius:7px;transition:width .8s cubic-bezier(.22,1,.36,1);}
+.sbar-val{font-size:11px;font-weight:800;min-width:28px;text-align:right;}
+
+/* Alert banner (over/under) */
+.alert-banner{
+  border-radius:18px;padding:14px 16px;margin-bottom:12px;
+  display:flex;align-items:flex-start;gap:12px;
+  position:relative;overflow:hidden;
+}
+.alert-banner::before{content:'';position:absolute;inset:0;opacity:.08;}
+.alert-ico{font-size:26px;flex-shrink:0;}
+.alert-txt-wrap .alert-title{font-size:14px;font-weight:900;margin-bottom:2px;}
+.alert-txt-wrap .alert-body{font-size:12px;line-height:1.5;font-weight:600;}
+.alert-over{background:rgba(255,45,120,0.1);border:1px solid rgba(255,45,120,0.25);}
+.alert-over .alert-title{color:var(--pink);}
+.alert-over .alert-body{color:rgba(255,107,157,0.75);}
+.alert-zero{background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.25);}
+.alert-zero .alert-title{color:var(--orange2);}
+.alert-zero .alert-body{color:rgba(255,154,60,0.75);}
+.alert-perfect{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);}
+.alert-perfect .alert-title{color:var(--green);}
+.alert-perfect .alert-body{color:rgba(127,255,212,0.65);}
+
+/* Meal log */
+.meal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.add-meal-btn{
+  padding:7px 14px;border-radius:14px;border:none;cursor:pointer;
+  background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.3);
+  font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:var(--orange);
+  transition:all .15s;
+}
+.add-meal-btn:active{transform:scale(.95);}
+.meal-list{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+.meal-item{
+  padding:11px 14px;border-radius:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.meal-time{font-size:11px;font-weight:800;color:var(--muted);min-width:36px;}
+.meal-name{font-size:13px;font-weight:700;color:var(--text);flex:1;}
+.meal-badges{display:flex;gap:5px;}
+.meal-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;}
+.meal-delete{font-size:16px;cursor:pointer;opacity:.5;transition:opacity .15s;background:none;border:none;color:var(--text);}
+.meal-delete:hover{opacity:1;}
+.meal-empty{text-align:center;padding:18px;font-size:13px;color:var(--muted);font-weight:600;}
+
+/* Add meal modal inside phone */
+.meal-modal{
+  position:absolute;inset:0;z-index:500;
+  display:none;flex-direction:column;justify-content:flex-end;
+}
+.meal-modal.show{display:flex;}
+.meal-dim{position:absolute;inset:0;background:rgba(0,0,0,0);backdrop-filter:blur(0);transition:all .4s;}
+.meal-modal.show .meal-dim{background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);}
+.meal-sheet{
+  position:relative;z-index:1;background:var(--card2);
+  border-radius:28px 28px 0 0;border-top:1px solid rgba(157,78,221,0.3);
+  transform:translateY(100%);transition:transform .45s cubic-bezier(.22,1,.36,1);
+  padding:16px 22px 30px;
+}
+.meal-modal.show .meal-sheet{transform:translateY(0);}
+.modal-handle{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,0.15);margin:0 auto 16px;}
+.modal-title{font-size:17px;font-weight:900;color:var(--text);margin-bottom:14px;}
+.modal-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.food-search{
+  width:100%;padding:12px 16px;border-radius:14px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  font-family:'Nunito',sans-serif;font-size:14px;color:var(--text);outline:none;
+  margin-bottom:10px;
+}
+.food-search::placeholder{color:var(--muted2);}
+.quick-foods{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.qf-chip{
+  padding:6px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);font-family:'Nunito',sans-serif;
+  font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.qf-chip:active,.qf-chip.sel{background:rgba(255,107,0,0.15);border-color:rgba(255,107,0,0.35);color:var(--orange);}
+.meal-time-row{display:flex;gap:6px;margin-bottom:14px;}
+.time-btn{
+  flex:1;padding:9px 4px;border-radius:12px;text-align:center;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.04);font-family:'Nunito',sans-serif;
+  font-size:12px;font-weight:800;color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.time-btn.sel{background:rgba(0,191,255,0.12);border-color:rgba(0,191,255,0.3);color:var(--blue);}
+
+/* AI Diet panel */
+.ai-diet-card{padding:18px;margin-bottom:12px;position:relative;overflow:hidden;}
+.ai-diet-card::before{content:'';position:absolute;top:-30px;left:-20px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(157,78,221,0.12) 0%,transparent 60%);}
+.ai-loading{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 0;}
+.ai-dots{display:flex;gap:6px;}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--purple2);animation:ai-bounce .9s ease infinite;}
+.ai-dot:nth-child(2){animation-delay:.15s;}
+.ai-dot:nth-child(3){animation-delay:.3s;}
+.ai-loading-txt{font-size:13px;font-weight:700;color:var(--muted);}
+.ai-diet-result{font-size:13px;color:var(--muted);line-height:1.7;font-weight:600;}
+.ai-diet-result strong{color:var(--text);font-weight:800;}
+.ai-refresh-btn{
+  margin-top:12px;padding:10px 18px;border-radius:14px;border:1px solid rgba(157,78,221,0.3);
+  background:rgba(157,78,221,0.1);font-family:'Nunito',sans-serif;
+  font-size:12px;font-weight:800;color:var(--purple2);cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:all .15s;
+}
+.ai-refresh-btn:active{transform:scale(.96);}
+
+/* ══════════════════════════════════════════════════════
+   PANEL 3 — CALENDAR
+══════════════════════════════════════════════════════ */
+.cal-section{padding:0 18px;}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cal-nav-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border2);cursor:pointer;font-size:18px;font-weight:900;color:var(--text);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.cal-nav-btn:active{transform:scale(.9);}
+.cal-title{font-size:16px;font-weight:900;color:var(--text);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dn{text-align:center;font-size:10px;font-weight:800;color:var(--muted2);padding:0 0 7px;}
+.cal-cell{aspect-ratio:1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card);font-size:12px;font-weight:700;color:var(--text);gap:1px;cursor:pointer;transition:all .15s;border:1px solid transparent;}
+.cal-cell:active{transform:scale(.9);}
+.cal-cell.empty{background:transparent;border:none;cursor:default;}
+.cal-cell.today{background:linear-gradient(135deg,#FF9A3C,#FF6B00);color:white;box-shadow:0 4px 16px rgba(255,107,0,0.4);border:none;}
+.cal-cell.has-ok{background:rgba(0,229,160,0.1);border-color:rgba(0,229,160,0.22);color:var(--green);}
+.cal-cell.has-warn{background:rgba(255,107,0,0.1);border-color:rgba(255,107,0,0.22);color:var(--orange2);}
+.cal-cell.has-danger{background:rgba(255,45,120,0.1);border-color:rgba(255,45,120,0.22);color:var(--pink);}
+.cal-cell.selected{border-color:var(--blue);box-shadow:0 0 14px rgba(0,191,255,0.3);}
+.cal-cnt{font-size:8px;font-weight:800;}
+.day-detail{margin-top:10px;border-radius:20px;overflow:hidden;}
+.dd-header{padding:13px 15px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.dd-title{font-size:13px;font-weight:900;color:var(--text);}
+.dd-summary{font-size:11px;color:var(--muted);font-weight:600;}
+.dd-empty{padding:16px;text-align:center;font-size:13px;color:var(--muted);font-weight:700;}
+.dr-item{padding:11px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.dr-item:last-child{border-bottom:none;}
+.dr-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:white;flex-shrink:0;}
+.dr-time{font-size:12px;font-weight:800;color:var(--orange);min-width:40px;}
+.dr-dur{font-size:14px;font-weight:900;}
+.dr-meta{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600;}
+.dr-badges{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.dr-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);}
+.dr-emoji{font-size:20px;}
+
+/* ══════════════════════════════════════════════════════
+   PANEL 4 — STATS
+══════════════════════════════════════════════════════ */
+.stats-section{padding:0 18px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px;}
+.st-card{padding:15px;border-radius:18px;}
+.st-val{font-size:25px;font-weight:900;letter-spacing:-.03em;}
+.st-lbl{font-size:10px;font-weight:700;color:var(--muted);margin-top:3px;}
+.chart-card{padding:15px;border-radius:18px;margin-bottom:10px;}
+.chart-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px;}
+.bar-row{display:flex;align-items:flex-end;gap:6px;height:70px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-fill{width:100%;border-radius:6px 6px 3px 3px;min-height:3px;transition:height .6s cubic-bezier(.22,1,.36,1);}
+.bar-lbl{font-size:9px;font-weight:700;color:var(--muted);}
+
+/* ══════════════════════════════════════════════════════
+   PANEL 5 — TIPS
+══════════════════════════════════════════════════════ */
+.tips-section{padding:0 18px;}
+.tip-card{padding:15px;border-radius:18px;margin-bottom:9px;display:flex;gap:12px;align-items:flex-start;}
+.tip-icon{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.tip-ttl{font-size:14px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.tip-body{font-size:12.5px;color:var(--muted);line-height:1.55;}
+
+/* ══ FLUSH SHEET ════════════════════════════════════════ */
+#flush-overlay{position:absolute;inset:0;z-index:300;display:none;flex-direction:column;justify-content:flex-end;}
+#flush-overlay.show{display:flex;}
+.flush-dim{position:absolute;inset:0;background:rgba(0,0,0,0);backdrop-filter:blur(0);transition:all .4s;}
+#flush-overlay.show .flush-dim{background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);}
+.flush-sheet{position:relative;z-index:1;background:var(--card2);border-radius:28px 28px 0 0;border-top:1px solid rgba(157,78,221,0.3);transform:translateY(100%);transition:transform .5s cubic-bezier(.22,1,.36,1);max-height:90%;overflow-y:auto;scrollbar-width:none;}
+#flush-overlay.show .flush-sheet{transform:translateY(0);}
+.flush-sheet::-webkit-scrollbar{display:none}
+.fs-handle{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,0.15);margin:12px auto 0;}
+
+.result-hero{padding:14px 22px 0;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.res-emoji{font-size:64px;animation:pop-in .5s cubic-bezier(.34,1.56,.64,1) both;}
+.res-title{font-size:21px;font-weight:900;color:var(--text);margin-top:8px;}
+.res-sub{font-size:13px;color:var(--muted);margin-top:3px;}
+.res-time{font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.04em;margin-top:4px;text-shadow:0 0 24px currentColor;transition:color .5s;}
+
+.flush-area{position:relative;height:88px;overflow:hidden;margin:12px 0 0;}
+.bowl-svg{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:178px;}
+#fw{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:138px;height:0;background:linear-gradient(180deg,rgba(0,191,255,0.5),rgba(0,80,180,0.9));border-radius:50% 50% 8px 8px;transition:height 1.4s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+#fw::after{content:'';position:absolute;top:0;left:-60%;width:220%;height:16px;background:rgba(255,255,255,0.18);border-radius:50%;animation:wave 1.5s linear infinite;}
+#fce{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:42px;z-index:2;transition:all 1.4s cubic-bezier(.55,0,.45,1);}
+.bub-wrap{position:absolute;inset:0;pointer-events:none;}
+
+.fs-divider{height:1px;background:rgba(255,255,255,0.06);margin:14px 22px 0;}
+.fs-form{padding:13px 22px;}
+.fs-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px;}
+.bristol-row{display:flex;gap:4px;}
+.bb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 2px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;color:var(--muted);gap:2px;transition:all .15s;}
+.bb-ico{font-size:19px;}
+.bb.sel{background:rgba(255,107,0,0.13);border-color:var(--sel-c,var(--orange));color:var(--sel-c,var(--orange));}
+.b-desc{font-size:12px;color:var(--muted);text-align:center;margin:6px 0 13px;min-height:16px;font-weight:600;}
+.c-row{display:flex;gap:10px;justify-content:center;margin-bottom:13px;}
+.csw{width:36px;height:36px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;transition:all .15s;position:relative;}
+.csw::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;transition:all .15s;}
+.csw.sel::after{border-color:var(--blue);}
+.csw.sel{transform:scale(1.2);box-shadow:0 0 16px rgba(0,191,255,0.5);}
+.fs-ta{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;resize:none;height:50px;font-size:14px;font-family:'Nunito',sans-serif;color:var(--text);outline:none;margin-bottom:11px;}
+.fs-ta::placeholder{color:var(--muted2);}
+.safe-bottom{height:20px;}
+
+/* ══ WARN BANNER ═════════════════════════════════════════ */
+#warn-banner{position:absolute;top:0;left:0;right:0;z-index:200;transform:translateY(-100%);transition:transform .4s cubic-bezier(.22,1,.36,1);padding:0 18px;}
+#warn-banner.show{transform:translateY(0);}
+.warn-inner{background:linear-gradient(135deg,#FF2D78,#FF6B00);border-radius:0 0 20px 20px;padding:58px 18px 15px;color:white;box-shadow:0 10px 30px rgba(255,45,120,0.4);text-align:center;}
+.warn-msg{font-size:14px;font-weight:800;line-height:1.4;}
+
+/* ══ KEYFRAMES ═══════════════════════════════════════════ */
+@keyframes mesh-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes idle-bob{0%,100%{transform:translateY(0) rotate(-.5deg)}50%{transform:translateY(-9px) rotate(.5deg)}}
+@keyframes char-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes char-shake{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-5deg) scale(1.02)}70%{transform:rotate(5deg) scale(1.02)}}
+@keyframes sweat-drop{0%{opacity:1;transform:translateY(0) scaleY(1)}100%{opacity:0;transform:translateY(26px) scaleY(1.5)}}
+@keyframes steam-rise{0%{opacity:.9;transform:translateY(0) scaleX(1)}100%{opacity:0;transform:translateY(-28px) scaleX(2.5)}}
+@keyframes pop-in{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes wave{0%{transform:translateX(-30%)}100%{transform:translateX(30%)}}
+@keyframes bubble-float{0%{opacity:.8;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.4)}}
+@keyframes breathe-ring{0%,100%{r:88;opacity:.28}50%{r:96;opacity:.1}}
+@keyframes phone-float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-9px) rotate(.8deg)}}
+@keyframes ai-bounce{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(-8px);opacity:1}}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes score-glow{0%,100%{filter:drop-shadow(0 0 6px rgba(0,229,160,0.5))}50%{filter:drop-shadow(0 0 18px rgba(0,229,160,0.9))}}
+@keyframes pulse-badge{0%,100%{box-shadow:0 0 0 0 currentColor}50%{box-shadow:0 0 0 6px rgba(255,45,120,0)}}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="bg-dots"></div>
+
+<div class="phone-outer">
+  <div class="phone-btn-silent"></div><div class="phone-btn-vol-up"></div>
+  <div class="phone-btn-vol-down"></div><div class="phone-btn-power"></div>
+  <div class="phone-bezel"></div>
+
+  <div class="phone-screen">
+    <div class="di"><div class="di-dot"></div><div class="di-cam"></div></div>
+    <div class="status-bar">
+      <div class="status-time" id="status-clock">9:41</div>
+      <div class="status-icons">
+        <div class="sig"><span></span><span></span><span></span><span></span></div>
+        <span style="font-size:12px">📶</span>
+        <div class="batt"></div>
+      </div>
+    </div>
+
+    <div id="warn-banner"><div class="warn-inner"><div class="warn-msg" id="warn-msg">⚠️</div></div></div>
+
+    <div id="app">
+      <div class="scroll-body" id="scroll-body">
+
+        <!-- ░░ PANEL: TIMER ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ -->
+        <div id="panel-timer" class="panel active">
+          <div class="page-header">
+            <div class="header-row">
+              <div class="app-title">뽀<span>직</span>이</div>
+              <div class="pill pill-orange">오늘 <span id="today-n">0</span>회</div>
+            </div>
+          </div>
+
+          <!-- IDLE VIEW -->
+          <div id="idle-view" style="padding:0 18px">
+            <!-- Score hero -->
+            <div class="g-card score-hero" style="margin-bottom:12px">
+              <div class="score-ring-wrap">
+                <svg viewBox="0 0 140 140">
+                  <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                  <circle id="score-arc" cx="70" cy="70" r="58" fill="none" stroke="var(--green)" stroke-width="10"
+                    stroke-linecap="round" stroke-dasharray="364" stroke-dashoffset="364"
+                    transform="rotate(-90 70 70)" style="transition:stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1),stroke .5s"/>
+                  <circle cx="70" cy="70" r="50" fill="rgba(0,229,160,0.04)"/>
+                </svg>
+                <div class="score-center">
+                  <div class="score-num" id="idle-score" style="color:var(--green)">—</div>
+                  <div class="score-lbl-sm">점수</div>
+                </div>
+              </div>
+              <div class="score-title" id="idle-score-title">오늘의 장 건강</div>
+              <div class="score-sub" id="idle-score-sub">버튼을 눌러 뽀직이와 함께 시작하세요!</div>
+            </div>
+
+            <!-- Quick stats -->
+            <div class="stat-row">
+              <div class="g-card g-card-sm stat-chip">
+                <div class="stat-chip-val" id="qs-total" style="color:var(--orange)">0</div>
+                <div class="stat-chip-lbl">Total</div>
+              </div>
+              <div class="g-card g-card-sm stat-chip">
+                <div class="stat-chip-val" id="qs-avg" style="color:var(--blue)">0:00</div>
+                <div class="stat-chip-lbl">평균</div>
+              </div>
+              <div class="g-card g-card-sm stat-chip">
+                <div class="stat-chip-val" id="qs-safe" style="color:var(--green)">0</div>
+                <div class="stat-chip-lbl">안전</div>
+              </div>
+            </div>
+
+            <button class="btn-main btn-start" onclick="startTimer()">
+              <span>🚽</span><span>변기에 앉았어요!</span>
+            </button>
+          </div>
+
+          <!-- TIMER VIEW -->
+          <div id="timer-view" style="display:none">
+            <div style="padding:10px 18px 0;display:flex;align-items:center;justify-content:space-between">
+              <div style="font-family:'Gaegu',cursive;font-size:28px;font-weight:700;color:var(--text);text-shadow:0 0 16px rgba(255,107,0,0.4)">뽀<span style="color:var(--orange)">직</span>이</div>
+              <div class="pill pill-orange">오늘 <span id="today-n2">0</span>회</div>
+            </div>
+            <div style="padding:0 18px">
+              <!-- Char stage card -->
+              <div class="g-card char-stage" id="char-card" style="margin-bottom:11px">
+                <div class="char-stage-bg" id="char-card-bg"></div>
+                <div style="position:relative;width:100%;display:flex;flex-direction:column;align-items:center">
+                  <div class="stage-badge" id="stage-pill">
+                    <div class="stage-dot" id="stage-dot"></div>
+                    <span id="stage-txt">SAFE</span>
+                  </div>
+
+                  <svg id="main-char" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                    <circle id="danger-ring" cx="100" cy="130" r="88" fill="none" stroke="transparent" stroke-width="0" opacity="0"/>
+                    <!-- TOILET TANK -->
+                    <rect x="26" y="8" width="148" height="72" rx="13" fill="var(--card)"/>
+                    <rect x="32" y="13" width="136" height="62" rx="9" fill="var(--card2)"/>
+                    <rect x="36" y="17" width="52" height="10" rx="5" fill="rgba(255,255,255,0.06)"/>
+                    <circle cx="152" cy="44" r="12" fill="var(--card)"/>
+                    <circle cx="152" cy="44" r="8.5" fill="rgba(255,255,255,0.04)"/>
+                    <circle cx="152" cy="44" r="4" fill="rgba(0,191,255,0.5)"/>
+                    <circle cx="152" cy="44" r="2" fill="rgba(0,191,255,0.9)"/>
+                    <!-- SEAT -->
+                    <ellipse cx="100" cy="112" rx="90" ry="23" fill="var(--card)"/>
+                    <ellipse cx="100" cy="108" rx="90" ry="23" fill="var(--card2)"/>
+                    <ellipse cx="100" cy="105" rx="68" ry="15" fill="var(--card)"/>
+                    <!-- BOWL -->
+                    <path d="M 18 108 Q 8 175 8 204 Q 8 224 100 224 Q 192 224 192 204 Q 192 175 182 108 Z" fill="var(--card)"/>
+                    <path d="M 26 110 Q 18 172 18 202 Q 18 222 100 222 Q 182 222 182 202 Q 182 172 174 110 Z" fill="var(--card2)"/>
+                    <ellipse cx="100" cy="200" rx="70" ry="14" fill="rgba(0,191,255,0.1)" id="bowl-water"/>
+                    <rect x="52" y="220" width="96" height="16" rx="7" fill="var(--card)"/>
+                    <rect x="44" y="232" width="112" height="8" rx="4" fill="rgba(255,255,255,0.04)"/>
+                    <!-- CHARACTER -->
+                    <g id="char-g">
+                      <circle id="c-aura" cx="100" cy="92" r="54" fill="none" stroke="transparent" stroke-width="0"/>
+                      <!-- body -->
+                      <ellipse id="cb0" cx="100" cy="114" rx="43" ry="32" fill="#C47A2A"/>
+                      <ellipse cx="85" cy="106" rx="14" ry="9" fill="rgba(255,210,120,0.18)"/>
+                      <ellipse id="cb1" cx="100" cy="90"  rx="31" ry="26" fill="#C47A2A"/>
+                      <ellipse cx="88" cy="83" rx="10" ry="7" fill="rgba(255,210,120,0.14)"/>
+                      <ellipse id="cb2" cx="100" cy="70"  rx="21" ry="19" fill="#C47A2A"/>
+                      <ellipse id="cb3" cx="100" cy="56"  rx="12.5" ry="12" fill="#C47A2A"/>
+                      <path id="c-swirl" d="M 69 113 Q 80 100 100 108 Q 120 116 131 107" stroke="rgba(0,0,0,0.18)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                      <path d="M 74 92 Q 84 82 100 88 Q 116 94 124 86" stroke="rgba(0,0,0,0.13)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                      <!-- arms -->
+                      <ellipse id="arm-l" cx="63"  cy="97" rx="17" ry="10" fill="#C47A2A" transform="rotate(-28,63,97)"/>
+                      <ellipse id="arm-r" cx="137" cy="97" rx="17" ry="10" fill="#C47A2A" transform="rotate(28,137,97)"/>
+                      <circle id="hand-l" cx="50" cy="90" r="9" fill="#C47A2A"/>
+                      <circle id="hand-r" cx="150" cy="90" r="9" fill="#C47A2A"/>
+                      <circle cx="45" cy="87" r="4" fill="#C47A2A" id="fkl"/>
+                      <circle cx="155" cy="87" r="4" fill="#C47A2A" id="fkr"/>
+                      <!-- legs -->
+                      <ellipse id="leg-l" cx="72"  cy="119" rx="16" ry="9" fill="#C47A2A"/>
+                      <ellipse id="leg-r" cx="128" cy="119" rx="16" ry="9" fill="#C47A2A"/>
+                      <ellipse id="foot-l" cx="58"  cy="131" rx="11" ry="6" fill="#C47A2A"/>
+                      <ellipse id="foot-r" cx="142" cy="131" rx="11" ry="6" fill="#C47A2A"/>
+                      <!-- phone prop -->
+                      <g id="phone-prop">
+                        <rect x="107" y="67" width="30" height="43" rx="6" fill="var(--bg)"/>
+                        <rect x="109" y="69" width="26" height="37" rx="4" fill="var(--blue)" opacity=".8"/>
+                        <rect x="117" y="69" width="10" height="3" rx="1.5" fill="var(--bg)" opacity=".6"/>
+                        <rect x="112" y="75" width="18" height="2.5" rx="1" fill="rgba(255,255,255,.7)"/>
+                        <rect x="112" y="81" width="13" height="2" rx="1" fill="rgba(255,255,255,.35)"/>
+                        <rect x="112" y="87" width="16" height="2" rx="1" fill="rgba(255,255,255,.3)"/>
+                        <rect x="112" y="93" width="10" height="2" rx="1" fill="rgba(255,255,255,.2)"/>
+                        <rect x="117" y="103" width="10" height="2" rx="1" fill="rgba(255,255,255,.25)"/>
+                      </g>
+                      <!-- FACE -->
+                      <ellipse cx="100" cy="67" rx="17" ry="16" fill="rgba(0,0,0,0.05)"/>
+                      <g id="eyes-normal">
+                        <circle cx="88" cy="64" r="7" fill="var(--bg)"/>
+                        <circle cx="112" cy="64" r="7" fill="var(--bg)"/>
+                        <circle cx="89.5" cy="61.5" r="3" fill="white"/>
+                        <circle cx="113.5" cy="61.5" r="3" fill="white"/>
+                        <circle cx="91.5" cy="65.5" r="1.3" fill="rgba(255,255,255,.7)"/>
+                        <circle cx="115.5" cy="65.5" r="1.3" fill="rgba(255,255,255,.7)"/>
+                      </g>
+                      <g id="brows-w" style="display:none">
+                        <path d="M 80 54 Q 88 50 96 55" stroke="var(--bg)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                        <path d="M 104 55 Q 112 50 120 54" stroke="var(--bg)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                      </g>
+                      <g id="eyes-dead" style="display:none">
+                        <line x1="82" y1="59" x2="94" y2="71" stroke="var(--bg)" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="94" y1="59" x2="82" y2="71" stroke="var(--bg)" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="106" y1="59" x2="118" y2="71" stroke="var(--bg)" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="118" y1="59" x2="106" y2="71" stroke="var(--bg)" stroke-width="4" stroke-linecap="round"/>
+                      </g>
+                      <ellipse id="blush-l" cx="77"  cy="71" rx="8" ry="5" fill="rgba(255,100,60,0.38)"/>
+                      <ellipse id="blush-r" cx="123" cy="71" rx="8" ry="5" fill="rgba(255,100,60,0.38)"/>
+                      <circle cx="100" cy="69" r="2.5" fill="rgba(0,0,0,0.35)"/>
+                      <path id="m-happy"   d="M 85 76 Q 100 92 115 76" stroke="var(--bg)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                      <path id="m-slight"  d="M 87 77 Q 100 88 113 77" stroke="var(--bg)" stroke-width="3.5" fill="none" stroke-linecap="round" style="display:none"/>
+                      <line id="m-neutral" x1="87" y1="78" x2="113" y2="78" stroke="var(--bg)" stroke-width="3.5" stroke-linecap="round" style="display:none"/>
+                      <path id="m-worry"   d="M 85 82 Q 100 74 115 82" stroke="var(--bg)" stroke-width="3.5" fill="none" stroke-linecap="round" style="display:none"/>
+                      <path id="m-panic"   d="M 83 85 Q 100 72 117 85" stroke="var(--bg)" stroke-width="4" fill="none" stroke-linecap="round" style="display:none"/>
+                      <path id="m-dead"    d="M 83 81 L 90 77 L 97 81 L 104 77 L 111 81 L 118 77 L 125 81" stroke="var(--bg)" stroke-width="3" fill="none" stroke-linecap="round" style="display:none"/>
+                      <g id="sweat-g"></g>
+                      <g id="steam-g"></g>
+                    </g>
+                  </svg>
+
+                  <div class="t-digits" id="t-big">00:00</div>
+                  <div class="t-sublbl" id="t-lbl">쾌적해요 😊</div>
+                  <div class="prog-track">
+                    <div class="prog-fill" id="prog-fill"></div>
+                  </div>
+                  <div class="prog-labels">
+                    <span class="prog-lbl">0</span><span class="prog-lbl">1분</span><span class="prog-lbl">3분</span><span class="prog-lbl">5분</span><span class="prog-lbl">7분</span>
+                  </div>
+                  <div class="stage-ticks" id="s-ticks">
+                    <div class="s-tick"></div><div class="s-tick"></div><div class="s-tick"></div>
+                    <div class="s-tick"></div><div class="s-tick"></div><div class="s-tick"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="g-card tip-chip" style="margin-bottom:11px">
+                <div class="tip-ico">💡</div>
+                <div class="tip-txt" id="tip-txt">변의가 느껴질 때만 앉으세요!</div>
+              </div>
+              <button class="btn-main btn-stop" onclick="stopTimer()"><span>✅</span><span>끝났어요!</span></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ░░ PANEL: HEALTH ░░░░░░░░░░░░░░░░░░░░░░░░░░░░ -->
+        <div id="panel-health" class="panel">
+          <div class="page-header">
+            <div class="header-row">
+              <div class="app-title">건강<span>점수</span></div>
+            </div>
+          </div>
+          <div class="health-section">
+            <!-- Today score -->
+            <div id="health-alert-wrap"></div>
+
+            <div class="g-card today-score-card" style="margin-bottom:12px">
+              <div class="tscore-row">
+                <div class="tscore-circle">
+                  <svg viewBox="0 0 72 72">
+                    <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
+                    <circle id="health-arc" cx="36" cy="36" r="30" fill="none" stroke="var(--green)" stroke-width="7"
+                      stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="188"
+                      transform="rotate(-90 36 36)" style="transition:stroke-dashoffset 1s,stroke .5s"/>
+                  </svg>
+                  <div class="tscore-inner">
+                    <div class="tscore-num" id="h-score" style="color:var(--green)">—</div>
+                    <div class="tscore-pt">점</div>
+                  </div>
+                </div>
+                <div class="tscore-info">
+                  <div class="tscore-title" id="h-score-title">오늘의 장 건강 점수</div>
+                  <div class="tscore-sub" id="h-score-sub">식사를 기록하면 점수를 확인할 수 있어요</div>
+                </div>
+              </div>
+              <div class="score-bars" id="h-bars"></div>
+            </div>
+
+            <!-- Meal log -->
+            <div class="meal-header">
+              <div class="sec-lbl" style="margin:0">오늘 먹은 식사</div>
+              <button class="add-meal-btn" onclick="openMealModal()">+ 식사 추가</button>
+            </div>
+            <div class="meal-list" id="meal-list">
+              <div class="g-card meal-empty">아직 기록된 식사가 없어요 🥗</div>
+            </div>
+
+            <!-- AI Diet -->
+            <div class="sec-lbl">🤖 AI 맞춤 식단 추천</div>
+            <div class="g-card ai-diet-card" id="ai-diet-card">
+              <div class="ai-loading" id="ai-loading" style="display:none">
+                <div class="ai-dots">
+                  <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
+                </div>
+                <div class="ai-loading-txt">AI가 분석 중이에요...</div>
+              </div>
+              <div id="ai-diet-result" style="font-size:13px;color:var(--muted);font-weight:600;line-height:1.7">
+                식사를 추가하거나 버튼을 눌러 AI 맞춤 식단 추천을 받아보세요! 🥦
+              </div>
+              <button class="ai-refresh-btn" onclick="fetchAIDiet()">
+                <span>✨</span><span>AI 식단 추천 받기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ░░ PANEL: CALENDAR ░░░░░░░░░░░░░░░░░░░░░░░░░░ -->
+        <div id="panel-calendar" class="panel">
+          <div class="page-header">
+            <div class="header-row"><div class="app-title">달<span>력</span></div></div>
+          </div>
+          <div class="cal-section">
+            <div class="cal-nav">
+              <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+              <div class="cal-title" id="cal-title"></div>
+              <button class="cal-nav-btn" onclick="calNext()">›</button>
+            </div>
+            <div class="cal-grid" id="cal-hdr"></div>
+            <div class="cal-grid" style="margin-top:3px" id="cal-cells"></div>
+            <div id="day-detail-panel"></div>
+          </div>
+        </div>
+
+        <!-- ░░ PANEL: STATS ░░░░░░░░░░░░░░░░░░░░░░░░░░░░ -->
+        <div id="panel-stats" class="panel">
+          <div class="page-header">
+            <div class="header-row"><div class="app-title">통<span>계</span></div></div>
+          </div>
+          <div class="stats-section">
+            <div class="sec-lbl">Overview</div>
+            <div class="stats-grid" id="s-cards"></div>
+            <div class="sec-lbl">최근 7일</div>
+            <div class="g-card chart-card">
+              <div class="chart-title">일평균 시간 (초)</div>
+              <div class="bar-row" id="s-bars"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ░░ PANEL: TIPS ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ -->
+        <div id="panel-tips" class="panel">
+          <div class="page-header">
+            <div class="header-row"><div class="app-title">건강<span>팁</span></div></div>
+          </div>
+          <div class="tips-section">
+            <div class="sec-lbl">Health Guide</div>
+            <div class="g-card tip-card"><div class="tip-icon" style="background:rgba(255,107,0,0.15)">⏱️</div><div><div class="tip-ttl">화장실 시간</div><div class="tip-body">배변은 1~2분이면 충분해요. 3분 이상 앉으면 항문 혈관에 압박이 가해져 치질 위험이 높아집니다.</div></div></div>
+            <div class="g-card tip-card"><div class="tip-icon" style="background:rgba(0,191,255,0.12)">🚰</div><div><div class="tip-ttl">수분 섭취</div><div class="tip-body">하루 물 1.5~2L. 아침 공복 따뜻한 물 한 잔이 장 운동을 활성화해요.</div></div></div>
+            <div class="g-card tip-card"><div class="tip-icon" style="background:rgba(0,229,160,0.12)">🥦</div><div><div class="tip-ttl">식이섬유</div><div class="tip-body">채소·과일·통곡물로 하루 25~30g. 변이 부드러워지고 배변이 훨씬 편해져요.</div></div></div>
+            <div class="g-card tip-card"><div class="tip-icon" style="background:rgba(255,45,120,0.12)">📵</div><div><div class="tip-ttl">스마트폰 금지</div><div class="tip-body">화장실에서 스마트폰을 보면 시간이 훌쩍 지나요. 잠깐 내려두세요!</div></div></div>
+            <div class="g-card tip-card"><div class="tip-icon" style="background:rgba(157,78,221,0.15)">🏥</div><div><div class="tip-ttl">전문의 상담</div><div class="tip-body">변에 피가 섞이거나 변비·설사가 2주 이상 지속되면 대장항문과를 방문하세요.</div></div></div>
+          </div>
+        </div>
+
+      </div><!-- scroll-body -->
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-item active" onclick="switchTab('timer',this)"><span class="tab-ico">🚽</span><span class="tab-lbl">타이머</span></button>
+        <button class="tab-item" onclick="switchTab('health',this)"><span class="tab-ico">💚</span><span class="tab-lbl">건강점수</span></button>
+        <button class="tab-item" onclick="switchTab('calendar',this)"><span class="tab-ico">📅</span><span class="tab-lbl">달력</span></button>
+        <button class="tab-item" onclick="switchTab('stats',this)"><span class="tab-ico">📊</span><span class="tab-lbl">통계</span></button>
+        <button class="tab-item" onclick="switchTab('tips',this)"><span class="tab-ico">💡</span><span class="tab-lbl">팁</span></button>
+      </div>
+
+      <!-- FLUSH SHEET -->
+      <div id="flush-overlay">
+        <div class="flush-dim"></div>
+        <div class="flush-sheet">
+          <div class="fs-handle"></div>
+          <div class="result-hero">
+            <div class="res-emoji" id="r-emoji">💩</div>
+            <div class="res-title" id="r-title">수고했어요!</div>
+            <div class="res-sub"   id="r-sub">오늘도 건강하게</div>
+            <div class="res-time"  id="r-time">00:00</div>
+          </div>
+          <div class="flush-area">
+            <svg class="bowl-svg" viewBox="0 0 178 60" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="89" cy="10" rx="80" ry="12" fill="var(--card)"/>
+              <ellipse cx="89" cy="7"  rx="80" ry="12" fill="var(--card2)"/>
+              <ellipse cx="89" cy="4"  rx="60" ry="9"  fill="rgba(255,255,255,0.04)"/>
+              <path d="M 12 7 Q 5 34 5 50 Q 5 60 89 60 Q 173 60 173 50 Q 173 34 166 7 Z" fill="var(--card2)"/>
+            </svg>
+            <div id="fw"></div>
+            <div id="fce">💩</div>
+            <div class="bub-wrap" id="bub-wrap"></div>
+          </div>
+          <div class="fs-divider"></div>
+          <div class="fs-form">
+            <div class="fs-label">변 형태 (Bristol Scale)</div>
+            <div class="bristol-row" id="b-row"></div>
+            <div class="b-desc" id="b-desc"></div>
+            <div class="fs-label">변 색상</div>
+            <div class="c-row" id="c-row"></div>
+            <textarea class="fs-ta" id="note-ta" placeholder="메모 (선택)..."></textarea>
+            <button class="btn-main btn-blue" id="btn-flush" onclick="doFlush()" style="margin-bottom:8px"><span>💦</span><span>물 내리기!</span></button>
+            <button class="btn-main btn-green" id="btn-done" onclick="closeSheet()" style="display:none"><span>✅</span><span>기록 완료!</span></button>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+
+      <!-- MEAL MODAL -->
+      <div id="meal-modal" class="meal-modal">
+        <div class="meal-dim" onclick="closeMealModal()"></div>
+        <div class="meal-sheet">
+          <div class="modal-handle"></div>
+          <div class="modal-title">🍽️ 식사 기록 추가</div>
+          <div class="modal-label">식사 시간</div>
+          <div class="meal-time-row" id="meal-time-row">
+            <div class="time-btn sel" onclick="selMealTime('아침',this)">🌅 아침</div>
+            <div class="time-btn" onclick="selMealTime('점심',this)">☀️ 점심</div>
+            <div class="time-btn" onclick="selMealTime('저녁',this)">🌙 저녁</div>
+            <div class="time-btn" onclick="selMealTime('간식',this)">🍎 간식</div>
+          </div>
+          <div class="modal-label">음식 입력</div>
+          <input class="food-search" id="food-input" placeholder="예: 현미밥, 요거트, 샐러드..." type="text"/>
+          <div class="modal-label">빠른 선택</div>
+          <div class="quick-foods" id="quick-foods"></div>
+          <button class="btn-main btn-green" onclick="addMeal()" style="padding:16px 0;font-size:15px"><span>➕</span><span>추가하기</span></button>
+        </div>
+      </div>
+
+    </div><!-- #app -->
+  </div><!-- phone-screen -->
+</div><!-- phone-outer -->
+
+<script>
+/* ════════════════════════════════════════════════════════
+   DATA & CONSTANTS
+════════════════════════════════════════════════════════ */
+const STAGES=[
+  {t:0,  key:'SAFE',    c:'#00E5A0',bg:'rgba(0,229,160,0.07)',   lbl:'쾌적해요 😊',      face:'happy',  sw:0,shk:false,stm:false,ph:true},
+  {t:60, key:'OKAY',    c:'#FFD60A',bg:'rgba(255,214,10,0.07)',  lbl:'괜찮아요 🙂',      face:'slight', sw:0,shk:false,stm:false,ph:true},
+  {t:120,key:'CAUTION', c:'#FF9A3C',bg:'rgba(255,154,60,0.08)',  lbl:'슬슬 위험해요 😐', face:'neutral',sw:1,shk:false,stm:false,ph:false},
+  {t:180,key:'WARNING', c:'#FF6B00',bg:'rgba(255,107,0,0.1)',    lbl:'위험해요! 😰',     face:'worry',  sw:2,shk:false,stm:true, ph:false},
+  {t:300,key:'DANGER',  c:'#FF2D78',bg:'rgba(255,45,120,0.12)', lbl:'🚨 치질 위험!',   face:'panic',  sw:3,shk:true, stm:true, ph:false},
+  {t:420,key:'CRITICAL',c:'#9D4EDD',bg:'rgba(157,78,221,0.14)', lbl:'☠️ 즉시 일어나!', face:'dead',   sw:3,shk:true, stm:true, ph:false},
+];
+const BRISTOL=[
+  {id:1,e:'🪨',l:'1형',d:'딱딱한 덩어리',c:'#92400e'},
+  {id:2,e:'🫘',l:'2형',d:'소시지 딱딱',c:'#a16207'},
+  {id:3,e:'🌭',l:'3형',d:'균열 소시지',c:'#b45309'},
+  {id:4,e:'🍌',l:'4형',d:'매끈한 소시지',c:'#16a34a'},
+  {id:5,e:'🫐',l:'5형',d:'부드러운 덩어리',c:'#ca8a04'},
+  {id:6,e:'💧',l:'6형',d:'흐릿한 조각',c:'#d97706'},
+  {id:7,e:'🌊',l:'7형',d:'완전 액체',c:'#dc2626'},
+];
+const COLORS=[
+  {id:'갈색',h:'#7c4b2a'},{id:'황색',h:'#a37c00'},{id:'녹색',h:'#166534'},
+  {id:'흑색',h:'#1f1635'},{id:'적색',h:'#991b1b'},{id:'회색',h:'#6b7280'},
+];
+const TIPS=['변의가 느껴질 때만 앉으세요!','하루 물 2L, 아침 공복이 최고예요.','발을 약간 높이면 배변이 더 쉬워요 🦶','식이섬유 채소·과일을 충분히 드세요.','스마트폰을 내려두면 시간이 짧아져요 📵','3분 이상이면 치질 위험이 높아져요!'];
+const QUICK_FOODS=['🥦 브로콜리','🥗 샐러드','🍌 바나나','🥕 당근','🫐 블루베리','🥚 삶은달걀','🍚 현미밥','🥛 요거트','🍊 오렌지','💧 물 2L','🌾 오트밀','🥑 아보카도'];
+
+const FOOD_SCORES = {
+  '브로콜리':9,'샐러드':8,'바나나':8,'당근':8,'블루베리':9,'삶은달걀':6,'현미밥':8,'요거트':8,'오렌지':8,'물':10,'오트밀':9,'아보카도':8,
+  '치킨':5,'피자':2,'햄버거':1,'라면':1,'치킨':3,'콜라':0,'커피':4,'과자':1,'빵':4,'케이크':0,'삼겹살':3,'술':0,
+};
+
+let elapsed=0,running=false,iv=null,lastWarn=0,tipI=0,tipTm=null;
+let records=[],meals=[],selB=4,selC='갈색',calY,calM,selCalDate=null;
+let lastSw=-1,lastStm=null,flushed=false,bubIv=null,selMealTimeVal='아침';
+
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+const today=()=>new Date().toISOString().slice(0,10);
+const NS='http://www.w3.org/2000/svg';
+const getStage=()=>STAGES.reduce((a,s)=>elapsed>=s.t?s:a,STAGES[0]);
+
+/* Clock */
+function updateClock(){const d=new Date();document.getElementById('status-clock').textContent=`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;}
+setInterval(updateClock,10000);updateClock();
+
+/* ════ HEALTH SCORE ══════════════════════════════════════ */
+function calcHealthScore(){
+  const todayRec=records.filter(r=>r.date===today());
+  const cnt=todayRec.length;
+  const todayMeals=meals.filter(m=>m.date===today());
+
+  let score=100;
+  let breakdown={toilet:100,time:100,food:100,frequency:100};
+
+  // Frequency (ideal: 1-3 times/day)
+  if(cnt===0){breakdown.frequency=20;}
+  else if(cnt===1){breakdown.frequency=100;}
+  else if(cnt<=3){breakdown.frequency=95;}
+  else if(cnt<=5){breakdown.frequency=60;}
+  else{breakdown.frequency=20;}
+
+  // Time (ideal: <120s)
+  if(todayRec.length>0){
+    const avgEl=todayRec.reduce((s,r)=>s+r.elapsed,0)/todayRec.length;
+    if(avgEl<60)breakdown.time=100;
+    else if(avgEl<120)breakdown.time=90;
+    else if(avgEl<180)breakdown.time=70;
+    else if(avgEl<300)breakdown.time=45;
+    else breakdown.time=15;
+  }
+
+  // Bristol (4=100, 3/5=80, 2/6=55, 1/7=25)
+  if(todayRec.length>0){
+    const avgB=todayRec.reduce((s,r)=>s+r.bristolId,0)/todayRec.length;
+    const diff=Math.abs(avgB-4);
+    if(diff<0.5)breakdown.toilet=100;
+    else if(diff<1)breakdown.toilet=80;
+    else if(diff<1.5)breakdown.toilet=60;
+    else if(diff<2.5)breakdown.toilet=35;
+    else breakdown.toilet=15;
+  }
+
+  // Food
+  if(todayMeals.length>0){
+    const total=todayMeals.reduce((s,m)=>s+m.score,0);
+    const avg=total/todayMeals.length;
+    breakdown.food=Math.round(avg*10);
+  } else {
+    breakdown.food=50; // neutral if no data
+  }
+
+  score=Math.round((breakdown.frequency*0.25+breakdown.time*0.3+breakdown.toilet*0.25+breakdown.food*0.2));
+  return{score,breakdown,cnt};
+}
+
+function renderHealthUI(){
+  const{score,breakdown,cnt}=calcHealthScore();
+  const todayRec=records.filter(r=>r.date===today());
+
+  // Color
+  let color,grade,msg;
+  if(score>=85){color='var(--green)';grade='훌륭해요! 🌟';msg='장 건강이 매우 좋은 하루예요';}
+  else if(score>=70){color='var(--blue)';grade='좋아요 👍';msg='꾸준히 유지하면 더 좋아져요';}
+  else if(score>=50){color='var(--yellow)';grade='보통이에요 😐';msg='식단과 화장실 습관을 개선해봐요';}
+  else if(score>=30){color='var(--orange)';grade='주의 필요 ⚠️';msg='장 건강에 신경 써야 할 것 같아요';}
+  else{color='var(--pink)';grade='위험해요! 🚨';msg='오늘 식습관과 배변 패턴을 점검하세요';}
+
+  // Update idle score ring
+  const arc=document.getElementById('score-arc');
+  if(arc){
+    const off=364-(364*(score/100));
+    arc.style.strokeDashoffset=off;
+    arc.setAttribute('stroke',color);
+    document.getElementById('idle-score').textContent=score;
+    document.getElementById('idle-score').style.color=color;
+    document.getElementById('idle-score-title').textContent=grade;
+    document.getElementById('idle-score-sub').textContent=msg;
+  }
+
+  // Update health panel
+  const harc=document.getElementById('health-arc');
+  if(harc){
+    const off2=188-(188*(score/100));
+    harc.style.strokeDashoffset=off2;
+    harc.setAttribute('stroke',color);
+    document.getElementById('h-score').textContent=score;
+    document.getElementById('h-score').style.color=color;
+    document.getElementById('h-score-title').textContent=grade;
+    document.getElementById('h-score-sub').textContent=msg;
+  }
+
+  // Breakdown bars
+  const bars=document.getElementById('h-bars');
+  if(bars){
+    const items=[
+      {lbl:'배변횟수',val:breakdown.frequency,c:'var(--orange)'},
+      {lbl:'시간점수',val:breakdown.time,c:'var(--blue)'},
+      {lbl:'변형태',val:breakdown.toilet,c:'var(--green)'},
+      {lbl:'식단',val:breakdown.food,c:'var(--purple2)'},
+    ];
+    bars.innerHTML=items.map(it=>`
+      <div class="sbar-row">
+        <div class="sbar-lbl">${it.lbl}</div>
+        <div class="sbar-track"><div class="sbar-fill" style="width:${it.val}%;background:${it.c}"></div></div>
+        <div class="sbar-val" style="color:${it.c}">${it.val}</div>
+      </div>`).join('');
+  }
+
+  // Alert banner
+  const alertWrap=document.getElementById('health-alert-wrap');
+  if(alertWrap){
+    if(cnt===0 && records.length>0){
+      alertWrap.innerHTML=`<div class="alert-banner alert-zero">
+        <div class="alert-ico">🫙</div>
+        <div class="alert-txt-wrap">
+          <div class="alert-title">오늘 화장실 기록이 없어요</div>
+          <div class="alert-body">하루에 1~3회가 이상적이에요. 물을 충분히 마시고 식이섬유를 섭취해보세요. 2일 이상 지속되면 변비를 의심해봐야 해요.</div>
+        </div>
+      </div>`;
+    } else if(cnt>=5){
+      alertWrap.innerHTML=`<div class="alert-banner alert-over">
+        <div class="alert-ico">🚨</div>
+        <div class="alert-txt-wrap">
+          <div class="alert-title">오늘 ${cnt}회! 과다 배변이에요</div>
+          <div class="alert-body">하루 5회 이상은 과민성대장증후군이나 감염의 신호일 수 있어요. 자극적인 음식을 피하고, 지속된다면 전문의 상담을 권장해요.</div>
+        </div>
+      </div>`;
+    } else if(cnt>=1 && cnt<=3 && score>=80){
+      alertWrap.innerHTML=`<div class="alert-banner alert-perfect">
+        <div class="alert-ico">✨</div>
+        <div class="alert-txt-wrap">
+          <div class="alert-title">오늘 장 건강 완벽해요!</div>
+          <div class="alert-body">이상적인 배변 횟수와 건강한 식단이에요. 이 습관을 계속 유지하세요! 뽀직이가 기뻐해요 🎉</div>
+        </div>
+      </div>`;
+    } else {
+      alertWrap.innerHTML='';
+    }
+  }
+}
+
+/* ════ MEAL ══════════════════════════════════════════════ */
+let selMealFoodInput='';
+
+function openMealModal(){
+  document.getElementById('food-input').value='';
+  selMealFoodInput='';
+  // Reset quick foods
+  const qf=document.getElementById('quick-foods');
+  qf.innerHTML=QUICK_FOODS.map(f=>`<div class="qf-chip" onclick="qfSelect(this,'${f}')">${f}</div>`).join('');
+  document.querySelector('.time-btn.sel')?.classList.remove('sel');
+  document.querySelector('.time-btn').classList.add('sel');
+  selMealTimeVal='아침';
+  const m=document.getElementById('meal-modal');
+  m.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>m.classList.add('show')));
+}
+function closeMealModal(){
+  const m=document.getElementById('meal-modal');
+  m.classList.remove('show');
+  setTimeout(()=>m.style.display='none',450);
+}
+function selMealTime(t,el){
+  selMealTimeVal=t;
+  document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function qfSelect(el,name){
+  document.querySelectorAll('.qf-chip').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  const clean=name.replace(/^[^\s]+\s/,'');
+  document.getElementById('food-input').value=clean;
+  selMealFoodInput=clean;
+}
+function getFoodScore(name){
+  for(const[k,v] of Object.entries(FOOD_SCORES)){
+    if(name.includes(k))return v;
+  }
+  return 5;
+}
+function addMeal(){
+  const raw=document.getElementById('food-input').value.trim();
+  if(!raw)return;
+  const score=getFoodScore(raw);
+  const now=new Date();
+  meals.unshift({name:raw,time:selMealTimeVal,score,date:today(),ts:now.toISOString()});
+  closeMealModal();
+  renderMealList();
+  renderHealthUI();
+  fetchAIDiet(true);
+}
+function deleteMeal(idx){
+  meals.splice(idx,1);
+  renderMealList();
+  renderHealthUI();
+}
+function renderMealList(){
+  const list=document.getElementById('meal-list');
+  const todayMeals=meals.filter(m=>m.date===today());
+  if(!todayMeals.length){
+    list.innerHTML='<div class="g-card meal-empty">아직 기록된 식사가 없어요 🥗</div>';
+    return;
+  }
+  const realIdx=todayMeals.map(m=>meals.indexOf(m));
+  list.innerHTML=todayMeals.map((m,i)=>{
+    const col=m.score>=8?'var(--green)':m.score>=6?'var(--blue)':m.score>=4?'var(--yellow)':'var(--pink)';
+    const lbl=m.score>=8?'건강':m.score>=6?'보통':m.score>=4?'주의':'나쁨';
+    return `<div class="g-card meal-item">
+      <div class="meal-time">${m.time}</div>
+      <div class="meal-name">${m.name}</div>
+      <div class="meal-badges">
+        <span class="meal-badge" style="color:${col};background:${col}18;border:1px solid ${col}30">${lbl} ${m.score}점</span>
+      </div>
+      <button class="meal-delete" onclick="deleteMeal(${realIdx[i]})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+/* ════ AI DIET ═══════════════════════════════════════════ */
+async function fetchAIDiet(silent=false){
+  const todayMeals=meals.filter(m=>m.date===today());
+  const todayRec=records.filter(r=>r.date===today());
+  const resultEl=document.getElementById('ai-diet-result');
+  const loadingEl=document.getElementById('ai-loading');
+  if(!silent){
+    loadingEl.style.display='flex';
+    resultEl.style.display='none';
+  }
+  let prompt=`당신은 소화기 건강 전문 영양사입니다. 다음 정보를 분석해 한국어로 맞춤형 장 건강 식단 추천을 해주세요.
+
+오늘 배변 기록: ${todayRec.length}회`;
+  if(todayRec.length>0){
+    const avgEl=Math.round(todayRec.reduce((s,r)=>s+r.elapsed,0)/todayRec.length);
+    const avgB=Math.round(todayRec.reduce((s,r)=>s+r.bristolId,0)/todayRec.length);
+    prompt+=`\n평균 배변 시간: ${avgEl}초\n평균 변 형태: Bristol ${avgB}형`;
+  }
+  if(todayMeals.length>0){
+    prompt+=`\n오늘 섭취 음식: ${todayMeals.map(m=>m.name).join(', ')}`;
+  } else {
+    prompt+='\n오늘 섭취 음식: 기록 없음';
+  }
+  prompt+=`\n\n위 정보를 바탕으로:
+1. 현재 장 건강 상태 간단 평가 (2줄 이내)
+2. 오늘 먹으면 좋은 음식 3가지 (이유 포함, 이모지 활용)
+3. 오늘 피해야 할 음식 2가지
+4. 내일 추천 식단 메뉴 간략히
+
+친근하고 따뜻한 톤으로, 각 섹션 앞에 **굵게** 제목을 붙여서 답해주세요. 총 150단어 이내.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await res.json();
+    const txt=data.content?.[0]?.text||'추천 데이터를 불러오지 못했어요.';
+    // Format: bold to styled
+    const formatted=txt
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\n/g,'<br>');
+    loadingEl.style.display='none';
+    resultEl.style.display='block';
+    resultEl.innerHTML=`<div class="ai-diet-result">${formatted}</div>`;
+  }catch(e){
+    loadingEl.style.display='none';
+    resultEl.style.display='block';
+    resultEl.innerHTML='<div class="ai-diet-result" style="color:var(--muted)">식사와 배변 기록을 추가하면 더 정확한 추천을 받을 수 있어요 🥗</div>';
+  }
+}
+
+/* ════ CHARACTER ═════════════════════════════════════════ */
+function setBodyColor(c){
+  ['cb0','cb1','cb2','cb3','leg-l','leg-r','foot-l','foot-r','arm-l','arm-r','hand-l','hand-r','fkl','fkr'].forEach(id=>{
+    const el=document.getElementById(id);if(el){el.setAttribute('fill',c);}
+  });
+}
+function setFace(face){
+  ['m-happy','m-slight','m-neutral','m-worry','m-panic','m-dead'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const dead=face==='dead';
+  document.getElementById('eyes-normal').style.display=dead?'none':'';
+  document.getElementById('eyes-dead').style.display=dead?'':'none';
+  const bw=document.getElementById('brows-w');if(bw)bw.style.display=(face==='worry'||face==='panic')?'':'none';
+  const bl=document.getElementById('blush-l'),br=document.getElementById('blush-r');
+  if(bl)bl.style.opacity=face==='happy'?'1':'0';if(br)br.style.opacity=face==='happy'?'1':'0';
+  const m=document.getElementById('m-'+face);if(m)m.style.display='';
+}
+function updateChar(){
+  const s=getStage();setBodyColor(s.c);setFace(s.face);
+  const pp=document.getElementById('phone-prop');pp.style.opacity=s.ph?'1':'0';pp.style.transition='opacity .6s';
+  const cg=document.getElementById('char-g');
+  cg.style.animation=s.shk?'char-shake .17s linear infinite':'char-bob 2.5s ease-in-out infinite';
+  const aura=document.getElementById('c-aura');
+  if(s.shk){aura.setAttribute('stroke',s.c);aura.setAttribute('stroke-width','5');aura.style.opacity='.3';aura.style.animation='breathe-ring 1s ease infinite';}
+  else{aura.setAttribute('stroke-width','0');aura.style.opacity='0';aura.style.animation='none';}
+  if(lastSw!==s.sw){
+    lastSw=s.sw;const sg=document.getElementById('sweat-g');sg.innerHTML='';
+    for(let i=0;i<s.sw;i++){
+      const el=document.createElementNS(NS,'ellipse');
+      el.setAttribute('cx',154+i*15);el.setAttribute('cy',64+i*14);el.setAttribute('rx','6');el.setAttribute('ry','8');el.setAttribute('fill','#93c5fd');
+      el.style.animation=`sweat-drop 1.2s ease-in ${i*0.38}s infinite`;sg.appendChild(el);
+    }
+  }
+  if(lastStm!==s.stm){
+    lastStm=s.stm;const stg=document.getElementById('steam-g');stg.innerHTML='';
+    if(s.stm){
+      for(let i=0;i<5;i++){
+        const el=document.createElementNS(NS,'rect');
+        el.setAttribute('x',74+i*11);el.setAttribute('y','30');el.setAttribute('width','8');el.setAttribute('height','22');el.setAttribute('rx','4');
+        el.setAttribute('fill',i<2?'rgba(255,107,0,0.55)':'rgba(255,45,120,0.5)');
+        el.style.animation=`steam-rise 1s ease-out ${i*0.22}s infinite`;stg.appendChild(el);
+      }
+    }
+  }
+}
+
+/* ════ TIMER UI ══════════════════════════════════════════ */
+function updateUI(){
+  const s=getStage();
+  document.getElementById('t-big').textContent=fmt(elapsed);
+  document.getElementById('t-big').style.color=s.c;
+  document.getElementById('t-lbl').textContent=s.lbl;
+  document.getElementById('t-lbl').style.color=s.c;
+  document.getElementById('stage-pill').style.background=s.bg;
+  document.getElementById('stage-pill').style.color=s.c;
+  document.getElementById('stage-pill').style.borderColor=s.c+'40';
+  document.getElementById('stage-dot').style.background=s.c;
+  document.getElementById('stage-dot').style.boxShadow=`0 0 6px ${s.c}`;
+  document.getElementById('stage-txt').textContent=s.key;
+  document.getElementById('char-card-bg').style.background=`radial-gradient(ellipse 80% 55% at 50% 0%,${s.bg} 0%,transparent 70%)`;
+  const pct=Math.min(elapsed/420*100,100);
+  const pf=document.getElementById('prog-fill');
+  pf.style.width=pct+'%';
+  const gc=pct>71?'var(--purple)':pct>57?'var(--pink)':pct>42?'var(--orange)':pct>28?'var(--orange2)':pct>14?'var(--yellow)':'var(--green)';
+  pf.style.background=`linear-gradient(to right, var(--green), ${gc})`;
+  pf.style.color=gc;
+  document.querySelectorAll('.s-tick').forEach((tk,i)=>{
+    const active=elapsed>=STAGES[i].t;
+    tk.style.background=active?STAGES[i].c:'rgba(255,255,255,0.07)';
+    tk.style.boxShadow=active?`0 0 9px ${STAGES[i].c}`:'none';
+    tk.style.opacity=active?'1':'0.35';
+  });
+}
+
+/* ════ TIMER CONTROL ════════════════════════════════════ */
+function startTimer(){
+  document.getElementById('idle-view').style.display='none';
+  document.getElementById('timer-view').style.display='block';
+  document.getElementById('today-n2').textContent=document.getElementById('today-n').textContent;
+  elapsed=0;lastWarn=0;lastSw=-1;lastStm=null;flushed=false;
+  running=true;clearInterval(iv);
+  iv=setInterval(()=>{elapsed++;updateUI();updateChar();checkWarn();},1000);
+  rotateTip();updateUI();updateChar();
+}
+function stopTimer(){running=false;clearInterval(iv);if(tipTm){clearTimeout(tipTm);tipTm=null;}openSheet();}
+function checkWarn(){
+  const W=[
+    {t:180,m:'⚠️ 3분 경과 — 항문 압력이 높아지고 있어요'},
+    {t:300,m:'🚨 5분 초과 — 치질 위험! 지금 바로 일어나세요!'},
+    {t:420,m:'☠️ 7분 이상 — 즉시 일어나세요!!'},
+  ];
+  const w=W.find(w=>elapsed===w.t&&lastWarn!==w.t);
+  if(!w)return;lastWarn=w.t;
+  document.getElementById('warn-msg').textContent=w.m;
+  document.getElementById('warn-banner').classList.add('show');
+  setTimeout(()=>document.getElementById('warn-banner').classList.remove('show'),4500);
+}
+function rotateTip(){document.getElementById('tip-txt').textContent=TIPS[tipI%TIPS.length];tipI++;if(tipTm)clearTimeout(tipTm);tipTm=setTimeout(rotateTip,6000);}
+
+/* ════ FLUSH SHEET ═══════════════════════════════════════ */
+function openSheet(){
+  const s=getStage();flushed=false;
+  let em='💩',ti='수고했어요!',su='오늘도 건강하게';
+  if(elapsed<120){em='🌟';ti='완벽해요!';su='아주 건강한 시간이에요';}
+  else if(elapsed<300){em='😊';ti='괜찮아요!';su='적당한 시간이었어요';}
+  else if(elapsed<420){em='😰';ti='좀 길었어요';su='다음엔 더 빨리 일어나요';}
+  else{em='💀';ti='위험했어요!';su='치질 꼭 조심하세요';}
+  document.getElementById('r-emoji').textContent=em;
+  document.getElementById('r-title').textContent=ti;
+  document.getElementById('r-sub').textContent=su;
+  document.getElementById('r-time').textContent=fmt(elapsed);
+  document.getElementById('r-time').style.color=s.c;
+  document.getElementById('fce').textContent=em;
+  document.getElementById('fce').style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:42px;z-index:2;transition:all 1.4s cubic-bezier(.55,0,.45,1)';
+  document.getElementById('fw').style.height='0';
+  document.getElementById('btn-flush').style.display='flex';document.getElementById('btn-flush').style.opacity='1';document.getElementById('btn-flush').style.pointerEvents='';
+  document.getElementById('btn-flush').innerHTML='<span>💦</span><span>물 내리기!</span>';
+  document.getElementById('btn-done').style.display='none';
+  const br=document.getElementById('b-row');br.innerHTML='';
+  BRISTOL.forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='bb'+(selB===b.id?' sel':'');
+    if(selB===b.id)btn.style.setProperty('--sel-c',b.c);
+    btn.innerHTML=`<span class="bb-ico">${b.e}</span>${b.l}`;
+    btn.onclick=()=>{selB=b.id;document.querySelectorAll('.bb').forEach(x=>{x.classList.remove('sel');x.style.removeProperty('--sel-c');});btn.classList.add('sel');btn.style.setProperty('--sel-c',b.c);document.getElementById('b-desc').textContent=b.d;};
+    br.appendChild(btn);
+  });
+  document.getElementById('b-desc').textContent=BRISTOL.find(b=>b.id===selB)?.d||'';
+  const cr=document.getElementById('c-row');cr.innerHTML='';
+  COLORS.forEach(c=>{const d=document.createElement('div');d.className='csw'+(selC===c.id?' sel':'');d.style.background=c.h;d.onclick=()=>{selC=c.id;document.querySelectorAll('.csw').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');};cr.appendChild(d);});
+  document.getElementById('note-ta').value='';
+  const ov=document.getElementById('flush-overlay');ov.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.add('show')));
+}
+function doFlush(){
+  if(flushed)return;flushed=true;
+  const btn=document.getElementById('btn-flush');btn.style.opacity='.5';btn.style.pointerEvents='none';btn.innerHTML='<span>💦</span><span>물 내리는 중...</span>';
+  document.getElementById('fw').style.height='88px';startBubbles();
+  setTimeout(()=>{const ch=document.getElementById('fce');ch.style.transform='translateX(-50%) translateY(50px) rotate(540deg) scale(0.1)';ch.style.opacity='0';},800);
+  setTimeout(()=>{document.getElementById('fw').style.height='0';stopBubbles();},2200);
+  setTimeout(()=>{btn.style.display='none';document.getElementById('btn-done').style.display='flex';splashBurst();},2600);
+}
+function startBubbles(){
+  const wrap=document.getElementById('bub-wrap');
+  bubIv=setInterval(()=>{const b=document.createElement('div');const sz=4+Math.random()*10;b.style.cssText=`position:absolute;width:${sz}px;height:${sz}px;border-radius:50%;border:1.5px solid rgba(0,191,255,0.7);background:rgba(0,191,255,0.08);left:${10+Math.random()*158}px;bottom:${5+Math.random()*14}px;animation:bubble-float ${0.7+Math.random()*.5}s ease-out ${Math.random()*.3}s forwards;pointer-events:none`;wrap.appendChild(b);setTimeout(()=>b.remove(),1600);},90);
+}
+function stopBubbles(){if(bubIv){clearInterval(bubIv);bubIv=null;}}
+function splashBurst(){const wrap=document.getElementById('bub-wrap');for(let i=0;i<12;i++){const b=document.createElement('div');const sz=10+Math.random()*14;b.style.cssText=`position:absolute;width:${sz}px;height:${sz}px;border-radius:50%;border:2px solid rgba(0,191,255,0.9);left:${20+Math.random()*140}px;bottom:${15+Math.random()*50}px;animation:bubble-float .5s ease-out ${i*.04}s forwards;pointer-events:none`;wrap.appendChild(b);setTimeout(()=>b.remove(),800);}}
+function closeSheet(){
+  const now=new Date();
+  records.unshift({elapsed,bristolId:selB,colorId:selC,note:document.getElementById('note-ta').value,ts:now.toISOString(),date:today(),time:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})});
+  const ov=document.getElementById('flush-overlay');ov.classList.remove('show');
+  setTimeout(()=>{ov.style.display='none';resetIdle();},500);
+  updateCounts();renderHealthUI();
+}
+function resetIdle(){
+  document.getElementById('idle-view').style.display='block';
+  document.getElementById('timer-view').style.display='none';
+  elapsed=0;lastSw=-1;lastStm=null;stopBubbles();
+}
+function updateCounts(){
+  const cnt=records.filter(r=>r.date===today()).length;
+  document.getElementById('today-n').textContent=cnt;
+  document.getElementById('today-n2').textContent=cnt;
+  const tot=records.length,avg=tot?Math.round(records.reduce((s,r)=>s+r.elapsed,0)/tot):0;
+  document.getElementById('qs-total').textContent=tot;
+  document.getElementById('qs-avg').textContent=fmt(avg);
+  document.getElementById('qs-safe').textContent=records.filter(r=>r.elapsed<180).length;
+}
+
+/* ════ TABS ══════════════════════════════════════════════ */
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('scroll-body').scrollTop=0;
+  if(name==='calendar')renderCal();
+  if(name==='stats')renderStats();
+  if(name==='health'){renderMealList();renderHealthUI();}
+}
+
+/* ════ CALENDAR ══════════════════════════════════════════ */
+function initCal(){const d=new Date();calY=d.getFullYear();calM=d.getMonth();}
+function calPrev(){calM--;if(calM<0){calM=11;calY--;}selCalDate=null;renderCal();}
+function calNext(){calM++;if(calM>11){calM=0;calY++;}selCalDate=null;renderCal();}
+function renderCal(){
+  document.getElementById('cal-title').textContent=`${calY}년 ${calM+1}월`;
+  document.getElementById('cal-hdr').innerHTML=['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dn">${d}</div>`).join('');
+  const fd=new Date(calY,calM,1).getDay();const days=new Date(calY,calM+1,0).getDate();const now=new Date();
+  const dm={};
+  records.forEach(r=>{const d=new Date(r.ts);if(d.getFullYear()===calY&&d.getMonth()===calM){const k=d.getDate();if(!dm[k])dm[k]=[];dm[k].push(r);}});
+  let h='';
+  for(let i=0;i<fd;i++)h+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=days;d++){
+    const rs=dm[d]||[];const isT=now.getFullYear()===calY&&now.getMonth()===calM&&now.getDate()===d;
+    const danger=rs.some(r=>r.elapsed>=300);const warn=!danger&&rs.some(r=>r.elapsed>=180);
+    const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSel=selCalDate===ds;
+    let cls='cal-cell'+(isT?' today':rs.length?(danger?' has-danger':warn?' has-warn':' has-ok'):'');
+    if(isSel&&!isT)cls+=' selected';
+    h+=`<div class="${cls}" onclick="selectDay('${ds}')"><span>${d}</span>${rs.length?`<span class="cal-cnt">${rs.length}회</span>`:''}</div>`;
+  }
+  document.getElementById('cal-cells').innerHTML=h;
+  renderDayDetail();
+}
+function selectDay(ds){selCalDate=selCalDate===ds?null:ds;renderCal();}
+function renderDayDetail(){
+  const panel=document.getElementById('day-detail-panel');
+  if(!selCalDate){panel.innerHTML='';return;}
+  const rs=records.filter(r=>r.date===selCalDate);
+  const d=new Date(selCalDate+'T00:00:00');
+  const dStr=`${d.getMonth()+1}월 ${d.getDate()}일`;
+  const total=rs.reduce((s,r)=>s+r.elapsed,0);
+  const avg=rs.length?Math.round(total/rs.length):0;
+  let html=`<div class="g-card day-detail" style="margin-top:10px">
+    <div class="dd-header">
+      <div class="dd-title">📋 ${dStr}</div>
+      <div class="dd-summary">${rs.length}회 | 총 ${fmt(total)} | 평균 ${fmt(avg)}</div>
+    </div>`;
+  if(!rs.length){html+=`<div class="dd-empty">기록 없음</div>`;}
+  else{
+    rs.forEach((r,i)=>{
+      const danger=r.elapsed>=300;const warn=r.elapsed>=180&&r.elapsed<300;const ok=r.elapsed<120;
+      const col=ok?'var(--green)':warn?'var(--orange)':danger?'var(--pink)':'var(--yellow)';
+      const bg=ok?'#009966':warn?'#CC5500':danger?'#CC1060':'#AA8800';
+      const bristol=BRISTOL.find(b=>b.id===r.bristolId);
+      const b1=bristol?`<span class="dr-badge" style="color:${bristol.c};background:${bristol.c}18;border-color:${bristol.c}30">${bristol.e} ${bristol.l}</span>`:'';
+      const b2=r.colorId?`<span class="dr-badge" style="color:var(--muted)">● ${r.colorId}</span>`:'';
+      const b3=r.note?`<span class="dr-badge" style="color:var(--muted)">📝 ${r.note.slice(0,12)}${r.note.length>12?'…':''}</span>`:'';
+      html+=`<div class="dr-item">
+        <div class="dr-num" style="background:${bg}">${i+1}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="dr-time">${r.time}</span>
+            <span class="dr-dur" style="color:${col}">${fmt(r.elapsed)}</span>
+          </div>
+          <div class="dr-badges">${b1}${b2}${b3}</div>
+        </div>
+        <div class="dr-emoji">${ok?'✅':warn?'⚠️':danger?'🚨':'😐'}</div>
+      </div>`;
+    });
+  }
+  html+='</div>';panel.innerHTML=html;
+}
+
+/* ════ STATS ═════════════════════════════════════════════ */
+function renderStats(){
+  const tot=records.length,avg=tot?Math.round(records.reduce((s,r)=>s+r.elapsed,0)/tot):0;
+  const danger=records.filter(r=>r.elapsed>=300).length;const todayCnt=records.filter(r=>r.date===today()).length;
+  document.getElementById('s-cards').innerHTML=[
+    {l:'Total',v:tot+'회',c:'var(--orange)'},
+    {l:'평균 시간',v:fmt(avg),c:'var(--blue)'},
+    {l:'위험 횟수',v:danger+'회',c:'var(--pink)'},
+    {l:'오늘',v:todayCnt+'회',c:'var(--green)'},
+  ].map(x=>`<div class="g-card st-card"><div class="st-val" style="color:${x.c}">${x.v}</div><div class="st-lbl">${x.l}</div></div>`).join('');
+  const days7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().slice(0,10);});
+  const bd=days7.map(iso=>{const rs=records.filter(r=>r.date===iso);const a=rs.length?Math.round(rs.reduce((s,r)=>s+r.elapsed,0)/rs.length):0;const dd=new Date(iso);return{l:`${dd.getMonth()+1}/${dd.getDate()}`,a,danger:rs.filter(r=>r.elapsed>=300).length};});
+  const mx=Math.max(...bd.map(d=>d.a),60);
+  document.getElementById('s-bars').innerHTML=bd.map(d=>`<div class="bar-col"><div class="bar-fill" style="height:${d.a?Math.max((d.a/mx)*62,4):3}px;background:${d.danger?'linear-gradient(to top,var(--pink),var(--orange))':d.a?'linear-gradient(to top,var(--green),var(--blue))':'rgba(255,255,255,0.07)'}"></div><div class="bar-lbl">${d.l}</div></div>`).join('');
+}
+
+/* ════ DEMO DATA ═════════════════════════════════════════ */
+function seedDemo(){
+  const data=[
+    {d:-1,el:88,b:4,c:'갈색'},{d:-1,el:205,b:3,c:'갈색'},
+    {d:-2,el:70,b:4,c:'황색'},{d:-3,el:325,b:2,c:'갈색'},
+    {d:-4,el:110,b:4,c:'갈색'},{d:-5,el:82,b:5,c:'갈색'},
+    {d:-6,el:245,b:3,c:'갈색'},{d:-6,el:390,b:1,c:'갈색'},
+  ];
+  data.forEach(({d,el,b,c})=>{
+    const dt=new Date();dt.setDate(dt.getDate()+d);dt.setHours(8+Math.floor(Math.random()*10),Math.floor(Math.random()*60),0,0);
+    records.push({elapsed:el,bristolId:b,colorId:c,note:'',ts:dt.toISOString(),date:dt.toISOString().slice(0,10),time:dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})});
+  });
+  // demo meals
+  const mealData=[{n:'현미밥',t:'아침'},{n:'브로콜리',t:'점심'},{n:'요거트',t:'간식'}];
+  mealData.forEach(({n,t})=>{meals.push({name:n,time:t,score:getFoodScore(n),date:today(),ts:new Date().toISOString()});});
+  updateCounts();renderHealthUI();
+}
+
+/* ════ INIT ══════════════════════════════════════════════ */
+initCal();
+seedDemo();
+</script>
+</body>
+</html>

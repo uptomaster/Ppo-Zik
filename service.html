@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>뽀직이 — 화장실 건강 타이머</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900;1000&family=Gaegu:wght@700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --pp-orange: #FF5C00;
+  --pp-yellow: #FFD600;
+  --pp-pink:   #FF3CAC;
+  --pp-blue:   #00C2FF;
+  --pp-green:  #00E676;
+  --pp-purple: #7B2FFF;
+  --pp-bg:     #0F0A1A;
+  --pp-card:   #1A1230;
+  --pp-card2:  #221840;
+  --pp-border: rgba(255,255,255,0.08);
+  --pp-text:   #F0E8FF;
+  --pp-muted:  rgba(240,232,255,0.45);
+}
+
+body {
+  min-height:100vh;
+  background: var(--pp-bg);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Nunito',sans-serif;
+  overflow:hidden;
+  position:relative;
+}
+
+/* Ambient bg */
+body::before {
+  content:''; position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 20%, rgba(255,92,0,0.15) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, rgba(123,47,255,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 55% at 50% 50%, rgba(0,194,255,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 30% at 70% 20%, rgba(255,60,172,0.1) 0%, transparent 50%);
+}
+
+/* Grid texture */
+body::after {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ══ PHONE FRAME ═══════════════════════════════════════ */
+.phone-outer {
+  position:relative; z-index:1;
+  width:393px; height:852px;
+  flex-shrink:0;
+}
+
+.phone-bezel {
+  position:absolute; inset:0; border-radius:54px;
+  background: linear-gradient(145deg, #2c1f4a 0%, #1a1230 40%, #0d0a1a 100%);
+  box-shadow:
+    0 0 0 1px rgba(123,47,255,0.3),
+    0 0 0 2px rgba(0,0,0,0.9),
+    0 40px 140px rgba(0,0,0,0.95),
+    0 10px 40px rgba(0,0,0,0.7),
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    inset 0 1px 0 rgba(200,150,255,0.2),
+    0 0 80px rgba(123,47,255,0.12);
+}
+
+.phone-btn-vol-up   { position:absolute; left:-3px; top:160px; width:4px; height:36px; border-radius:2px 0 0 2px; background:#2a1a40; box-shadow:-1px 0 3px rgba(0,0,0,.5); }
+.phone-btn-vol-down { position:absolute; left:-3px; top:208px; width:4px; height:36px; border-radius:2px 0 0 2px; background:#2a1a40; box-shadow:-1px 0 3px rgba(0,0,0,.5); }
+.phone-btn-silent   { position:absolute; left:-3px; top:120px; width:4px; height:28px; border-radius:2px 0 0 2px; background:#2a1a40; box-shadow:-1px 0 3px rgba(0,0,0,.5); }
+.phone-btn-power    { position:absolute; right:-3px; top:180px; width:4px; height:60px; border-radius:0 2px 2px 0; background:#2a1a40; box-shadow:1px 0 3px rgba(0,0,0,.5); }
+
+.phone-screen {
+  position:absolute; top:8px; left:8px; right:8px; bottom:8px;
+  border-radius:47px; overflow:hidden;
+  background: var(--pp-bg);
+}
+.phone-screen::after {
+  content:''; position:absolute; inset:0; z-index:9999; pointer-events:none;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.04) 100%);
+  border-radius:47px;
+}
+
+/* ══ STATUS BAR ═════════════════════════════════════════ */
+.status-bar {
+  position:absolute; top:0; left:0; right:0; height:54px; z-index:100;
+  display:flex; align-items:flex-end; padding:0 28px 8px; justify-content:space-between;
+  pointer-events:none;
+}
+.status-time { font-size:15px; font-weight:800; color:var(--pp-text); letter-spacing:-.01em; }
+.status-icons { display:flex; align-items:center; gap:6px; }
+.status-signal { width:16px; height:10px; display:flex; align-items:flex-end; gap:1.5px; }
+.status-signal span { display:block; width:3px; border-radius:1px; background:var(--pp-text); }
+.status-signal span:nth-child(1){height:4px}
+.status-signal span:nth-child(2){height:6px}
+.status-signal span:nth-child(3){height:8px}
+.status-signal span:nth-child(4){height:10px}
+.status-batt { width:25px; height:12px; border:1.5px solid var(--pp-text); border-radius:3px; position:relative; opacity:.8; }
+.status-batt::before { content:''; position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:2.5px; height:6px; background:var(--pp-text); border-radius:0 1px 1px 0; }
+.status-batt::after  { content:''; position:absolute; inset:1.5px 1.5px 1.5px auto; width:14px; border-radius:1px; background:var(--pp-green); }
+
+/* Dynamic Island */
+.dynamic-island {
+  position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:101;
+  width:120px; height:34px; border-radius:17px; background:#000;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 0 20px rgba(123,47,255,0.3);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.di-camera { width:11px; height:11px; border-radius:50%; background:#0a0a12; border:1.5px solid #050508; position:relative; }
+.di-camera::after { content:''; position:absolute; inset:2px; border-radius:50%; background:#0a1a2a; }
+.di-dot { width:8px; height:8px; border-radius:50%; background:#0a1a0a; }
+
+/* ══ APP ════════════════════════════════════════════════ */
+#app {
+  position:absolute; inset:0;
+  background: var(--pp-bg);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+
+.scroll-body {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:90px;
+}
+.scroll-body::-webkit-scrollbar{display:none}
+
+/* ══ TAB BAR ════════════════════════════════════════════ */
+.tab-bar {
+  position:absolute; bottom:0; left:0; right:0; height:83px;
+  background:rgba(15,10,26,0.92);
+  backdrop-filter:blur(24px) saturate(180%);
+  border-top:1px solid rgba(123,47,255,0.25);
+  display:flex; padding:8px 0 0;
+}
+.tab-item {
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+  border:none; background:none; cursor:pointer;
+  font-family:'Nunito',sans-serif; font-size:10px; font-weight:800; color:var(--pp-muted);
+  transition:all .2s; padding:0;
+}
+.tab-ico { font-size:24px; line-height:1; transition:transform .2s; }
+.tab-item.active { color:var(--pp-orange); }
+.tab-item.active .tab-ico { transform:scale(1.18) translateY(-2px); filter:drop-shadow(0 0 8px rgba(255,92,0,0.6)); }
+
+/* ══ PANELS ═════════════════════════════════════════════ */
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* ══ HEADER ═════════════════════════════════════════════ */
+.app-header { padding:56px 20px 0; }
+.app-header-row { display:flex; align-items:center; justify-content:space-between; padding:2px 0 16px; }
+.app-title {
+  font-family:'Gaegu',cursive; font-size:36px; font-weight:700;
+  color:var(--pp-text); letter-spacing:-.01em;
+  text-shadow:0 0 20px rgba(255,92,0,0.4);
+}
+.app-title span { color:var(--pp-orange); }
+.today-pill {
+  background:rgba(255,92,0,0.15); border:1px solid rgba(255,92,0,0.3);
+  border-radius:20px; padding:6px 14px;
+  font-size:13px; font-weight:800; color:var(--pp-orange);
+  box-shadow:0 0 12px rgba(255,92,0,0.15);
+}
+
+/* ══ IDLE ═══════════════════════════════════════════════ */
+.idle-section { padding:0 20px; }
+
+.idle-char-wrap {
+  background:linear-gradient(145deg, #1f1438 0%, #160e2e 60%, #1a0a2a 100%);
+  border-radius:28px; padding:28px 20px 22px;
+  display:flex; flex-direction:column; align-items:center;
+  border:1px solid rgba(123,47,255,0.25);
+  box-shadow:0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,92,0,0.06), inset 0 1px 0 rgba(255,255,255,0.05);
+  position:relative; overflow:hidden; margin-bottom:14px;
+}
+.idle-char-wrap::before {
+  content:''; position:absolute; top:-40px; right:-30px;
+  width:160px; height:160px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,92,0,0.12) 0%, transparent 65%);
+}
+.idle-char-wrap::after {
+  content:''; position:absolute; bottom:-30px; left:-20px;
+  width:120px; height:120px; border-radius:50%;
+  background:radial-gradient(circle, rgba(123,47,255,0.1) 0%, transparent 65%);
+}
+.idle-char-svg { width:160px; height:160px; }
+.idle-headline { font-size:20px; font-weight:900; color:var(--pp-text); margin-top:10px; letter-spacing:-.02em; text-align:center; line-height:1.2; }
+.idle-sub { font-size:13px; color:var(--pp-muted); margin-top:5px; text-align:center; line-height:1.5; }
+
+/* Quick stats */
+.qstats { display:flex; gap:10px; margin-bottom:14px; }
+.qstat {
+  flex:1; background:var(--pp-card); border-radius:18px; padding:14px 10px;
+  border:1px solid var(--pp-border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.3); text-align:center;
+}
+.qstat-val { font-size:21px; font-weight:900; font-variant-numeric:tabular-nums; }
+.qstat-lbl { font-size:10px; font-weight:700; color:var(--pp-muted); margin-top:3px; text-transform:uppercase; letter-spacing:.05em; }
+
+/* Start button */
+.btn-start-ios {
+  width:100%; border:none; cursor:pointer;
+  background:linear-gradient(135deg, #FF8C00 0%, #FF5C00 50%, #FF2D00 100%);
+  border-radius:18px; padding:19px 0;
+  font-family:'Nunito',sans-serif; font-size:17px; font-weight:900;
+  color:white; letter-spacing:-.01em;
+  box-shadow:0 6px 30px rgba(255,92,0,0.5), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  transition:transform .12s, box-shadow .12s; position:relative; overflow:hidden;
+}
+.btn-start-ios::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,transparent 100%);
+  border-radius:18px 18px 0 0;
+}
+.btn-start-ios:active { transform:scale(.97); box-shadow:0 3px 15px rgba(255,92,0,0.4); }
+
+/* ══ TIMER SCREEN ═══════════════════════════════════════ */
+.timer-section { padding:0 20px; }
+
+.char-card {
+  background:var(--pp-card);
+  border-radius:28px; overflow:hidden;
+  border:1px solid rgba(255,255,255,0.07);
+  box-shadow:0 4px 30px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3);
+  margin-bottom:12px; position:relative; transition:background .8s;
+}
+.char-card-bg {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,92,0,0.08) 0%, transparent 70%);
+  pointer-events:none; transition:background 1s;
+}
+.char-card-content { padding:18px 20px 14px; display:flex; flex-direction:column; align-items:center; }
+
+.stage-pill {
+  display:flex; align-items:center; gap:6px; padding:5px 14px; border-radius:20px;
+  font-size:11px; font-weight:800; margin-bottom:6px; transition:all .5s;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.stage-pill-dot { width:7px; height:7px; border-radius:50%; }
+
+#main-char { width:200px; height:220px; }
+
+.timer-digits-wrap { margin-top:4px; text-align:center; }
+.timer-big {
+  font-size:60px; font-weight:900; font-variant-numeric:tabular-nums;
+  letter-spacing:-.05em; line-height:1; transition:color .5s;
+  font-family:'Nunito',sans-serif;
+  text-shadow:0 0 30px currentColor;
+}
+.timer-status-lbl { font-size:14px; font-weight:700; color:var(--pp-muted); margin-top:3px; transition:color .5s; }
+
+/* Progress bar */
+.ios-progress-wrap {
+  width:100%; height:10px; border-radius:10px;
+  background:rgba(255,255,255,0.07); overflow:visible;
+  position:relative; margin:12px 0 4px;
+}
+.ios-progress-fill {
+  height:100%; border-radius:10px; width:0%;
+  transition:width 1s linear, background .5s; position:relative;
+  box-shadow:0 0 12px currentColor;
+}
+.ios-progress-fill::after {
+  content:''; position:absolute; right:-5px; top:50%;
+  transform:translateY(-50%);
+  width:18px; height:18px; border-radius:50%;
+  background:white; border:3px solid currentColor;
+  box-shadow:0 0 10px currentColor, 0 2px 6px rgba(0,0,0,0.4);
+}
+.progress-labels { display:flex; justify-content:space-between; margin-top:8px; }
+.prog-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.2); }
+
+.stage-ticks { display:flex; gap:4px; margin:10px 0 0; }
+.stage-tick { flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,0.08); transition:background .4s, box-shadow .4s; }
+
+.timer-info-card {
+  background:var(--pp-card); border-radius:18px; padding:13px 15px;
+  border:1px solid var(--pp-border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+  margin-bottom:12px; display:flex; align-items:center; gap:12px;
+}
+.tinfo-ico { font-size:22px; }
+.tinfo-txt { font-size:13px; color:var(--pp-muted); line-height:1.5; font-weight:600; flex:1; }
+
+.btn-stop-ios {
+  width:100%; border:none; cursor:pointer;
+  background:linear-gradient(135deg, #FF6B9D 0%, #FF3CAC 50%, #CC2280 100%);
+  border-radius:18px; padding:19px 0;
+  font-family:'Nunito',sans-serif; font-size:17px; font-weight:900;
+  color:white; letter-spacing:-.01em;
+  box-shadow:0 6px 30px rgba(255,60,172,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  transition:transform .12s; position:relative; overflow:hidden;
+}
+.btn-stop-ios::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.18) 0%,transparent 100%);
+  border-radius:18px 18px 0 0;
+}
+.btn-stop-ios:active { transform:scale(.97); }
+
+/* ══ WARNING ═════════════════════════════════════════════ */
+#warn-banner {
+  position:absolute; top:0; left:0; right:0; z-index:200;
+  transform:translateY(-100%); transition:transform .4s cubic-bezier(.22,1,.36,1); padding:0 20px;
+}
+#warn-banner.show { transform:translateY(0); }
+.warn-inner {
+  background:linear-gradient(135deg,#FF3CAC,#FF5C00);
+  border-radius:0 0 20px 20px;
+  padding:60px 20px 16px; color:white;
+  box-shadow:0 8px 30px rgba(255,60,172,0.4); text-align:center;
+}
+.warn-inner .warn-msg { font-size:14px; font-weight:800; line-height:1.4; }
+
+/* ══ CALENDAR ════════════════════════════════════════════ */
+.cal-section { padding:0 20px; }
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-nav-btn {
+  width:36px; height:36px; border-radius:50%;
+  background:var(--pp-card); border:1px solid var(--pp-border); cursor:pointer;
+  font-size:18px; font-weight:900; color:var(--pp-text);
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+}
+.cal-nav-btn:active { transform:scale(.92); }
+.cal-title { font-size:17px; font-weight:900; color:var(--pp-text); letter-spacing:-.02em; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.cal-dname { text-align:center; font-size:10px; font-weight:800; color:var(--pp-muted); padding:0 0 7px; }
+.cal-cell {
+  aspect-ratio:1; border-radius:12px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:var(--pp-card); font-size:13px; font-weight:700; color:var(--pp-text);
+  gap:2px; cursor:pointer; transition:all .15s; border:1px solid transparent;
+}
+.cal-cell:active { transform:scale(.94); }
+.cal-cell.empty { background:transparent; border:none; cursor:default; }
+.cal-cell.today { background:linear-gradient(135deg,#FF8C00,#FF5C00); color:white; border:none; box-shadow:0 4px 15px rgba(255,92,0,0.4); }
+.cal-cell.has-ok { background:rgba(0,230,118,0.12); border-color:rgba(0,230,118,0.25); color:#00E676; }
+.cal-cell.has-danger { background:rgba(255,60,172,0.12); border-color:rgba(255,60,172,0.25); color:#FF3CAC; }
+.cal-cell.selected { border-color:var(--pp-blue); box-shadow:0 0 12px rgba(0,194,255,0.3); }
+.cal-cnt { font-size:8px; font-weight:800; }
+
+/* Day detail panel */
+.day-detail {
+  background:var(--pp-card); border-radius:20px;
+  border:1px solid var(--pp-border);
+  margin-top:12px; overflow:hidden;
+  transition:all .3s;
+}
+.day-detail-header {
+  padding:14px 16px 10px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--pp-border);
+}
+.day-detail-title { font-size:14px; font-weight:900; color:var(--pp-text); }
+.day-detail-empty { padding:16px; text-align:center; font-size:13px; color:var(--pp-muted); font-weight:700; }
+.day-record-item {
+  padding:12px 16px;
+  display:flex; align-items:center; gap:12px;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.day-record-item:last-child { border-bottom:none; }
+.dr-time {
+  font-size:13px; font-weight:800; color:var(--pp-orange);
+  min-width:42px; text-align:center;
+}
+.dr-num {
+  width:24px; height:24px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:900; color:white;
+  flex-shrink:0;
+}
+.dr-info { flex:1; }
+.dr-duration { font-size:14px; font-weight:900; color:var(--pp-text); }
+.dr-meta { font-size:11px; color:var(--pp-muted); font-weight:600; margin-top:2px; }
+.dr-badges { display:flex; gap:5px; margin-top:4px; flex-wrap:wrap; }
+.dr-badge {
+  font-size:10px; font-weight:800; padding:2px 8px; border-radius:8px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.dr-emoji { font-size:22px; }
+
+/* ══ STATS ═══════════════════════════════════════════════ */
+.stats-section { padding:0 20px; }
+.section-title { font-size:11px; font-weight:800; color:var(--pp-muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; }
+.stats-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+.stat-card-ios {
+  background:var(--pp-card); border-radius:18px; padding:16px;
+  border:1px solid var(--pp-border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+}
+.sc-val { font-size:26px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.sc-lbl { font-size:11px; font-weight:700; color:var(--pp-muted); margin-top:3px; }
+.chart-card-ios {
+  background:var(--pp-card); border-radius:18px; padding:16px;
+  border:1px solid var(--pp-border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.25); margin-bottom:10px;
+}
+.chart-title-ios { font-size:13px; font-weight:800; color:var(--pp-text); margin-bottom:14px; }
+.bar-row-ios { display:flex; align-items:flex-end; gap:6px; height:72px; }
+.bar-col-ios { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.bar-fill-ios { width:100%; border-radius:6px 6px 3px 3px; min-height:3px; }
+.bar-lbl-ios { font-size:9px; font-weight:700; color:var(--pp-muted); }
+
+/* ══ TIPS ════════════════════════════════════════════════ */
+.tips-section { padding:0 20px; }
+.tip-card-ios {
+  background:var(--pp-card); border-radius:18px; padding:16px;
+  border:1px solid var(--pp-border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.25);
+  margin-bottom:10px; display:flex; gap:14px; align-items:flex-start;
+}
+.tip-icon-wrap {
+  width:42px; height:42px; border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; flex-shrink:0;
+}
+.tip-title-ios { font-size:14px; font-weight:800; color:var(--pp-text); margin-bottom:4px; }
+.tip-body-ios  { font-size:13px; color:var(--pp-muted); line-height:1.5; }
+
+/* ══ FLUSH SHEET ═════════════════════════════════════════ */
+#flush-overlay {
+  position:absolute; inset:0; z-index:300; display:none;
+  flex-direction:column; justify-content:flex-end;
+}
+#flush-overlay.show { display:flex; }
+.flush-dim {
+  position:absolute; inset:0; background:rgba(0,0,0,0);
+  transition:background .4s, backdrop-filter .4s; backdrop-filter:blur(0px);
+}
+#flush-overlay.show .flush-dim { background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); }
+.flush-sheet-ios {
+  position:relative; z-index:1;
+  background:var(--pp-card2); border-radius:28px 28px 0 0;
+  border-top:1px solid rgba(123,47,255,0.3);
+  transform:translateY(100%); transition:transform .5s cubic-bezier(.22,1,.36,1);
+  max-height:88%; overflow-y:auto; scrollbar-width:none;
+}
+#flush-overlay.show .flush-sheet-ios { transform:translateY(0); }
+.flush-sheet-ios::-webkit-scrollbar { display:none; }
+.sheet-handle-ios {
+  width:40px; height:5px; border-radius:3px;
+  background:rgba(255,255,255,0.15); margin:12px auto 0;
+}
+
+.result-hero { padding:16px 24px 0; display:flex; flex-direction:column; align-items:center; text-align:center; }
+.result-emoji-big { font-size:68px; animation:pop-in .5s cubic-bezier(.34,1.56,.64,1) both; }
+.result-title-big { font-size:22px; font-weight:900; color:var(--pp-text); letter-spacing:-.02em; margin-top:8px; }
+.result-sub-ios   { font-size:13px; color:var(--pp-muted); margin-top:3px; }
+.result-time-ios  { font-size:40px; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:-.04em; margin-top:5px; transition:color .5s; text-shadow:0 0 20px currentColor; }
+
+.toilet-flush-area { position:relative; height:90px; overflow:hidden; margin:12px 0 0; }
+.bowl-visual { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:180px; }
+#flush-water {
+  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  width:140px; height:0;
+  background:linear-gradient(180deg,rgba(0,194,255,0.5),rgba(0,100,200,0.9));
+  border-radius:50% 50% 8px 8px; transition:height 1.4s cubic-bezier(.4,0,.2,1); overflow:hidden;
+}
+#flush-water::after {
+  content:''; position:absolute; top:0; left:-60%; width:220%; height:16px;
+  background:rgba(255,255,255,0.18); border-radius:50%; animation:wave 1.5s linear infinite;
+}
+#flush-char-emoji { position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:44px; z-index:2; transition:all 1.4s cubic-bezier(.55,0,.45,1); }
+.bubble-wrap { position:absolute; inset:0; pointer-events:none; }
+
+.flush-divider { height:1px; background:rgba(255,255,255,0.06); margin:14px 24px 0; }
+.record-form-ios { padding:14px 24px; }
+.form-label-ios {
+  font-size:11px; font-weight:800; color:var(--pp-muted);
+  text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px;
+}
+.bristol-row-ios { display:flex; gap:5px; }
+.bristol-btn-ios {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:8px 2px; border-radius:14px;
+  border:1.5px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04);
+  cursor:pointer; font-family:'Nunito',sans-serif;
+  font-size:9px; font-weight:800; color:var(--pp-muted); gap:3px; transition:all .15s;
+}
+.bb-ico { font-size:20px; }
+.bristol-btn-ios.sel { background:rgba(255,92,0,0.15); border-color:var(--sel-c,#FF5C00); color:var(--sel-c,#FF5C00); }
+.bristol-desc-ios { font-size:12px; color:var(--pp-muted); text-align:center; margin:6px 0 14px; min-height:16px; font-weight:600; }
+
+.color-row-ios { display:flex; gap:10px; justify-content:center; margin-bottom:14px; }
+.c-swatch {
+  width:36px; height:36px; border-radius:50%;
+  border:2.5px solid transparent; cursor:pointer; transition:all .15s; position:relative;
+}
+.c-swatch::after {
+  content:''; position:absolute; inset:-4px; border-radius:50%;
+  border:2px solid transparent; transition:all .15s;
+}
+.c-swatch.sel::after { border-color:var(--pp-blue); }
+.c-swatch.sel { transform:scale(1.2); box-shadow:0 0 15px rgba(0,194,255,0.4); }
+
+.flush-textarea {
+  width:100%; padding:12px 14px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); border-radius:12px;
+  resize:none; height:52px; font-size:14px;
+  font-family:'Nunito',sans-serif; color:var(--pp-text); outline:none; margin-bottom:12px;
+}
+.flush-textarea::placeholder { color:rgba(255,255,255,0.2); }
+
+.btn-flush-ios {
+  width:100%; border:none; cursor:pointer;
+  background:linear-gradient(135deg, #00C2FF 0%, #0075FF 100%);
+  border-radius:16px; padding:17px 0;
+  font-family:'Nunito',sans-serif; font-size:16px; font-weight:900;
+  color:white; letter-spacing:-.01em;
+  box-shadow:0 6px 25px rgba(0,122,255,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .12s;
+}
+.btn-flush-ios:active { transform:scale(.98); }
+.btn-done-ios {
+  display:none; width:100%; border:none; cursor:pointer;
+  background:linear-gradient(135deg, #00E676 0%, #00A854 100%);
+  border-radius:16px; padding:17px 0; margin-top:10px;
+  font-family:'Nunito',sans-serif; font-size:16px; font-weight:900; color:white;
+  box-shadow:0 6px 25px rgba(0,230,118,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition:transform .12s;
+}
+.btn-done-ios:active { transform:scale(.98); }
+.safe-bottom { height:20px; }
+
+/* ══ KEYFRAMES ═══════════════════════════════════════════ */
+@keyframes idle-bob    { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-10px) rotate(1deg)} }
+@keyframes char-bob    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes char-shake  { 0%,100%{transform:rotate(0) scale(1)} 20%{transform:rotate(-5deg) scale(1.02)} 70%{transform:rotate(5deg) scale(1.02)} }
+@keyframes sweat-drop  { 0%{opacity:1;transform:translateY(0) scaleY(1)}100%{opacity:0;transform:translateY(24px) scaleY(1.5)} }
+@keyframes steam-rise  { 0%{opacity:.9;transform:translateY(0) scaleX(1)}100%{opacity:0;transform:translateY(-26px) scaleX(2.2)} }
+@keyframes pop-in      { 0%{transform:scale(0.3);opacity:0}100%{transform:scale(1);opacity:1} }
+@keyframes wave        { 0%{transform:translateX(-30%)} 100%{transform:translateX(30%)} }
+@keyframes bubble-float { 0%{opacity:.8;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(1.4)} }
+@keyframes breathe-ring { 0%,100%{r:88;opacity:.25} 50%{r:96;opacity:.08} }
+@keyframes phone-float { 0%,100%{transform:translateY(0) rotate(-1.5deg)} 50%{transform:translateY(-8px) rotate(1deg)} }
+@keyframes pulse-glow  { 0%,100%{filter:drop-shadow(0 0 8px rgba(255,92,0,0.5))} 50%{filter:drop-shadow(0 0 20px rgba(255,92,0,0.9))} }
+@keyframes star-spin   { 0%{transform:rotate(0deg) scale(1)} 100%{transform:rotate(360deg) scale(1)} }
+@keyframes danger-pulse { 0%,100%{opacity:0.2} 50%{opacity:0.7} }
+</style>
+</head>
+<body>
+
+<div class="phone-outer">
+  <div class="phone-btn-silent"></div>
+  <div class="phone-btn-vol-up"></div>
+  <div class="phone-btn-vol-down"></div>
+  <div class="phone-btn-power"></div>
+  <div class="phone-bezel"></div>
+
+  <div class="phone-screen">
+    <div class="dynamic-island">
+      <div class="di-dot"></div>
+      <div class="di-camera"></div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-time" id="status-clock">9:41</div>
+      <div class="status-icons">
+        <div class="status-signal"><span></span><span></span><span></span><span></span></div>
+        <span style="font-size:12px">📶</span>
+        <div class="status-batt"></div>
+      </div>
+    </div>
+
+    <div id="warn-banner">
+      <div class="warn-inner">
+        <div class="warn-msg" id="warn-msg">⚠️ 경고</div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div class="scroll-body" id="scroll-body">
+
+        <!-- ▶ TIMER PANEL -->
+        <div id="panel-timer" class="panel active">
+          <div class="app-header">
+            <div class="app-header-row">
+              <div class="app-title">뽀<span>직</span>이</div>
+              <div class="today-pill">오늘 <span id="today-n">0</span>회</div>
+            </div>
+          </div>
+
+          <!-- IDLE -->
+          <div id="idle-view" class="idle-section">
+            <div class="idle-char-wrap">
+              <svg class="idle-char-svg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" style="animation:idle-bob 3.5s ease-in-out infinite">
+                <!-- sparkles -->
+                <text x="20" y="30" font-size="14" opacity=".7" style="animation:star-spin 4s linear infinite;transform-origin:20px 30px">✦</text>
+                <text x="130" y="25" font-size="10" opacity=".5">✧</text>
+                <text x="140" y="70" font-size="12" opacity=".6">⋆</text>
+                <!-- glow halo -->
+                <circle cx="80" cy="85" r="54" fill="none" stroke="rgba(255,92,0,0.12)" stroke-width="2"/>
+                <circle cx="80" cy="85" r="48" fill="rgba(255,92,0,0.04)"/>
+                <!-- toilet base -->
+                <ellipse cx="80" cy="130" rx="52" ry="15" fill="#1a1240"/>
+                <ellipse cx="80" cy="122" rx="52" ry="15" fill="#221a44"/>
+                <ellipse cx="80" cy="118" rx="39" ry="10" fill="#2a1f54"/>
+                <!-- poop character body - more stylized -->
+                <!-- main body -->
+                <ellipse cx="80" cy="103" rx="31" ry="25" fill="#C47A2A"/>
+                <!-- highlight on body -->
+                <ellipse cx="70" cy="96" rx="10" ry="8" fill="rgba(255,210,120,0.25)"/>
+                <!-- mid tier -->
+                <ellipse cx="80" cy="83"  rx="23" ry="19" fill="#D0823A"/>
+                <!-- top tier -->
+                <ellipse cx="80" cy="66"  rx="16" ry="14" fill="#D88844"/>
+                <!-- tip -->
+                <ellipse cx="80" cy="53"  rx="9"  ry="8.5"  fill="#DC8E4A"/>
+                <!-- swirl details -->
+                <path d="M 56 103 Q 65 92 80 99 Q 96 106 103 98" stroke="rgba(160,90,10,0.3)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <path d="M 62 85 Q 70 78 82 82 Q 92 86 97 81" stroke="rgba(160,90,10,0.2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <!-- cute arms -->
+                <ellipse cx="50" cy="94" rx="13" ry="8" fill="#C87A28" transform="rotate(-22,50,94)"/>
+                <ellipse cx="110" cy="94" rx="13" ry="8" fill="#C87A28" transform="rotate(22,110,94)"/>
+                <!-- hands with fingers suggestion -->
+                <circle cx="40" cy="89" r="7" fill="#C87A28"/>
+                <circle cx="120" cy="89" r="7" fill="#C87A28"/>
+                <!-- sparkle on hands -->
+                <circle cx="37" cy="86" r="2" fill="rgba(255,220,150,0.4)"/>
+                <circle cx="123" cy="86" r="2" fill="rgba(255,220,150,0.4)"/>
+                <!-- face - bigger, rounder eyes -->
+                <ellipse cx="80" cy="68" rx="13" ry="12" fill="rgba(0,0,0,0.06)"/>
+                <circle cx="74" cy="65.5" r="5.5" fill="#1A0A2E"/>
+                <circle cx="86" cy="65.5" r="5.5" fill="#1A0A2E"/>
+                <!-- eye shines -->
+                <circle cx="75.5" cy="63.5" r="2.2" fill="white"/>
+                <circle cx="87.5" cy="63.5" r="2.2" fill="white"/>
+                <circle cx="77.2" cy="66.5" r="1" fill="rgba(255,255,255,0.6)"/>
+                <circle cx="89.2" cy="66.5" r="1" fill="rgba(255,255,255,0.6)"/>
+                <!-- smile - wider, cuter -->
+                <path d="M 72 73 Q 80 82 88 73" stroke="#1A0A2E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <!-- blush -->
+                <ellipse cx="67" cy="71" rx="6" ry="4" fill="rgba(255,100,60,0.35)"/>
+                <ellipse cx="93" cy="71" rx="6" ry="4" fill="rgba(255,100,60,0.35)"/>
+                <!-- tiny nose dot -->
+                <circle cx="80" cy="69" r="1.5" fill="rgba(160,80,10,0.5)"/>
+                <!-- crown -->
+                <text x="80" y="37" font-size="17" text-anchor="middle" style="animation:pulse-glow 2s ease-in-out infinite">👑</text>
+              </svg>
+              <div class="idle-headline">건강한 화장실 습관 🌟</div>
+              <div class="idle-sub">변기에 앉으면 뽀직이와 함께!<br>오래 앉을수록 점점 위험해져요 😱</div>
+            </div>
+
+            <div class="qstats">
+              <div class="qstat">
+                <div class="qstat-val" id="qs-total" style="color:var(--pp-orange)">0</div>
+                <div class="qstat-lbl">Total</div>
+              </div>
+              <div class="qstat">
+                <div class="qstat-val" id="qs-avg" style="color:var(--pp-blue)">0:00</div>
+                <div class="qstat-lbl">평균</div>
+              </div>
+              <div class="qstat">
+                <div class="qstat-val" id="qs-safe" style="color:var(--pp-green)">0</div>
+                <div class="qstat-lbl">안전</div>
+              </div>
+            </div>
+
+            <button class="btn-start-ios" onclick="startTimer()">
+              <span>🚽</span><span>변기에 앉았어요!</span>
+            </button>
+          </div>
+
+          <!-- TIMER VIEW -->
+          <div id="timer-view" style="display:none">
+            <div style="padding:12px 20px 0;display:flex;align-items:center;justify-content:space-between">
+              <div style="font-family:'Gaegu',cursive;font-size:30px;font-weight:700;color:var(--pp-text);text-shadow:0 0 15px rgba(255,92,0,0.4)">뽀<span style="color:var(--pp-orange)">직</span>이</div>
+              <div class="today-pill">오늘 <span id="today-n2">0</span>회</div>
+            </div>
+            <div class="timer-section">
+              <div class="char-card" id="char-card">
+                <div class="char-card-bg" id="char-card-bg"></div>
+                <div class="char-card-content">
+                  <div class="stage-pill" id="stage-pill">
+                    <div class="stage-pill-dot" id="stage-pill-dot"></div>
+                    <span id="stage-pill-txt">SAFE</span>
+                  </div>
+
+                  <svg id="main-char" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                    <!-- danger ring -->
+                    <circle id="danger-ring" cx="100" cy="130" r="88" fill="none" stroke="transparent" stroke-width="0" opacity="0"/>
+
+                    <!-- TOILET TANK -->
+                    <rect x="28" y="10" width="144" height="70" rx="12" fill="#1a1240"/>
+                    <rect x="34" y="15" width="132" height="60" rx="9" fill="#221a44"/>
+                    <rect x="38" y="19" width="50" height="9" rx="4" fill="rgba(255,255,255,0.08)"/>
+                    <!-- flush button -->
+                    <circle cx="150" cy="42" r="11" fill="#2a1f54"/>
+                    <circle cx="150" cy="42" r="8" fill="#1f1640"/>
+                    <circle cx="150" cy="42" r="4" fill="#150e30"/>
+                    <!-- button led -->
+                    <circle cx="150" cy="42" r="2" fill="rgba(0,194,255,0.6)"/>
+
+                    <!-- seat rim -->
+                    <ellipse cx="100" cy="112" rx="88" ry="22" fill="#2a1f54"/>
+                    <ellipse cx="100" cy="108" rx="88" ry="22" fill="#32245e"/>
+                    <ellipse cx="100" cy="106" rx="66" ry="15" fill="#1a1240"/>
+
+                    <!-- bowl -->
+                    <path d="M 20 108 Q 10 172 10 202 Q 10 222 100 222 Q 190 222 190 202 Q 190 172 180 108 Z" fill="#2a1f54"/>
+                    <path d="M 28 110 Q 20 170 20 200 Q 20 220 100 220 Q 180 220 180 200 Q 180 170 172 110 Z" fill="#32245e"/>
+                    <!-- water -->
+                    <ellipse cx="100" cy="198" rx="68" ry="14" fill="rgba(0,194,255,0.15)" id="bowl-water"/>
+                    <!-- base -->
+                    <rect x="54" y="218" width="92" height="16" rx="7" fill="#2a1f54"/>
+                    <rect x="46" y="230" width="108" height="8" rx="4" fill="#221a44"/>
+
+                    <!-- CHARACTER GROUP -->
+                    <g id="char-g">
+                      <!-- aura ring -->
+                      <circle id="c-aura" cx="100" cy="92" r="54" fill="none" stroke="transparent" stroke-width="0"/>
+
+                      <!-- POOP BODY - more stylized with gradients via filter -->
+                      <!-- main base body -->
+                      <ellipse id="cb0" cx="100" cy="114" rx="42" ry="31" fill="#C47A2A"/>
+                      <!-- highlight -->
+                      <ellipse cx="86" cy="106" rx="13" ry="9" fill="rgba(255,210,120,0.2)"/>
+                      <!-- mid tier -->
+                      <ellipse id="cb1" cx="100" cy="91"  rx="30" ry="25" fill="#C47A2A"/>
+                      <!-- top tier -->
+                      <ellipse id="cb2" cx="100" cy="71"  rx="20" ry="18" fill="#C47A2A"/>
+                      <!-- tip -->
+                      <ellipse id="cb3" cx="100" cy="57"  rx="12" ry="11" fill="#C47A2A"/>
+                      <!-- swirl lines -->
+                      <path id="c-swirl" d="M 70 112 Q 80 100 100 108 Q 120 116 130 108" stroke="rgba(160,80,0,0.22)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                      <path d="M 75 93 Q 83 84 100 89 Q 116 94 123 87" stroke="rgba(160,80,0,0.17)" stroke-width="2" fill="none" stroke-linecap="round" id="swirl2"/>
+
+                      <!-- ARMS - chunkier -->
+                      <ellipse id="arm-l" cx="64"  cy="98" rx="16" ry="9" fill="#C47A2A" transform="rotate(-28,64,98)"/>
+                      <ellipse id="arm-r" cx="136" cy="98" rx="16" ry="9" fill="#C47A2A" transform="rotate(28,136,98)"/>
+                      <!-- Fists -->
+                      <circle id="hand-l" cx="52" cy="91" r="8.5" fill="#C47A2A"/>
+                      <circle id="hand-r" cx="148" cy="91" r="8.5" fill="#C47A2A"/>
+                      <!-- finger bumps on fists -->
+                      <circle cx="47" cy="88" r="3.5" fill="#C47A2A" id="fkl"/>
+                      <circle cx="153" cy="88" r="3.5" fill="#C47A2A" id="fkr"/>
+
+                      <!-- LEGS -->
+                      <ellipse id="leg-l" cx="72"  cy="119" rx="16" ry="8" fill="#C47A2A"/>
+                      <ellipse id="leg-r" cx="128" cy="119" rx="16" ry="8" fill="#C47A2A"/>
+                      <ellipse id="foot-l" cx="59"  cy="130" rx="11" ry="6" fill="#C47A2A"/>
+                      <ellipse id="foot-r" cx="141" cy="130" rx="11" ry="6" fill="#C47A2A"/>
+
+                      <!-- PHONE PROP (more detailed) -->
+                      <g id="phone-prop" opacity="1">
+                        <rect x="106" y="68" width="30" height="42" rx="6" fill="#0F0A1A"/>
+                        <rect x="108" y="70" width="26" height="36" rx="4" fill="#00C2FF" opacity=".8"/>
+                        <!-- notch -->
+                        <rect x="116" y="70" width="10" height="3" rx="1.5" fill="#0F0A1A" opacity=".6"/>
+                        <!-- screen content lines -->
+                        <rect x="111" y="76" width="18" height="2.5" rx="1" fill="rgba(255,255,255,.7)"/>
+                        <rect x="111" y="81" width="13" height="2" rx="1" fill="rgba(255,255,255,.35)"/>
+                        <rect x="111" y="86" width="16" height="2" rx="1" fill="rgba(255,255,255,.35)"/>
+                        <rect x="111" y="91" width="10" height="2" rx="1" fill="rgba(255,255,255,.2)"/>
+                        <!-- home bar -->
+                        <rect x="116" y="101" width="10" height="2" rx="1" fill="rgba(255,255,255,.3)"/>
+                      </g>
+
+                      <!-- FACE BACKGROUND -->
+                      <ellipse cx="100" cy="68" rx="16" ry="15" fill="rgba(0,0,0,0.06)"/>
+
+                      <!-- EYES normal -->
+                      <g id="eyes-normal">
+                        <circle cx="88"  cy="65" r="6.5" fill="#1A0A2E"/>
+                        <circle cx="112" cy="65" r="6.5" fill="#1A0A2E"/>
+                        <!-- shines -->
+                        <circle cx="89.5" cy="62.5" r="2.8" fill="white"/>
+                        <circle cx="113.5" cy="62.5" r="2.8" fill="white"/>
+                        <circle cx="91.5" cy="66" r="1.2" fill="rgba(255,255,255,0.7)"/>
+                        <circle cx="115.5" cy="66" r="1.2" fill="rgba(255,255,255,0.7)"/>
+                      </g>
+                      <!-- worried brows -->
+                      <g id="brows-w" style="display:none">
+                        <path d="M 80 55 Q 88 51 96 56" stroke="#1A0A2E" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <path d="M 104 56 Q 112 51 120 55" stroke="#1A0A2E" stroke-width="3" fill="none" stroke-linecap="round"/>
+                      </g>
+                      <!-- DEAD EYES (X) -->
+                      <g id="eyes-dead" style="display:none">
+                        <line x1="83" y1="60" x2="93" y2="70" stroke="#1A0A2E" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="93" y1="60" x2="83" y2="70" stroke="#1A0A2E" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="107" y1="60" x2="117" y2="70" stroke="#1A0A2E" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="117" y1="60" x2="107" y2="70" stroke="#1A0A2E" stroke-width="3.5" stroke-linecap="round"/>
+                      </g>
+                      <!-- blush cheeks -->
+                      <ellipse id="blush-l" cx="77"  cy="72" rx="7" ry="4" fill="rgba(255,100,60,0.35)"/>
+                      <ellipse id="blush-r" cx="123" cy="72" rx="7" ry="4" fill="rgba(255,100,60,0.35)"/>
+                      <!-- nose dot -->
+                      <circle cx="100" cy="69" r="2" fill="rgba(160,80,10,0.45)" id="char-nose"/>
+
+                      <!-- MOUTHS -->
+                      <path id="m-happy"   d="M 85 76 Q 100 90 115 76" stroke="#1A0A2E" stroke-width="3" fill="none" stroke-linecap="round"/>
+                      <path id="m-slight"  d="M 87 76 Q 100 86 113 76" stroke="#1A0A2E" stroke-width="3" fill="none" stroke-linecap="round" style="display:none"/>
+                      <line id="m-neutral" x1="87" y1="77" x2="113" y2="77" stroke="#1A0A2E" stroke-width="3" stroke-linecap="round" style="display:none"/>
+                      <path id="m-worry"   d="M 85 81 Q 100 73 115 81" stroke="#1A0A2E" stroke-width="3" fill="none" stroke-linecap="round" style="display:none"/>
+                      <path id="m-panic"   d="M 83 84 Q 100 72 117 84" stroke="#1A0A2E" stroke-width="3.5" fill="none" stroke-linecap="round" style="display:none"/>
+                      <path id="m-dead"    d="M 83 81 L 90 77 L 97 81 L 104 77 L 111 81 L 118 77 L 125 81" stroke="#1A0A2E" stroke-width="2.5" fill="none" stroke-linecap="round" style="display:none"/>
+
+                      <!-- sweat & steam -->
+                      <g id="sweat-g"></g>
+                      <g id="steam-g"></g>
+                    </g>
+                  </svg>
+
+                  <div class="timer-digits-wrap">
+                    <div class="timer-big" id="t-big">00:00</div>
+                    <div class="timer-status-lbl" id="t-lbl">쾌적해요 😊</div>
+                  </div>
+
+                  <div class="ios-progress-wrap">
+                    <div class="ios-progress-fill" id="prog-fill"></div>
+                  </div>
+                  <div class="progress-labels">
+                    <span class="prog-lbl">0</span>
+                    <span class="prog-lbl">1분</span>
+                    <span class="prog-lbl">3분</span>
+                    <span class="prog-lbl">5분</span>
+                    <span class="prog-lbl">7분</span>
+                  </div>
+
+                  <div class="stage-ticks" id="s-ticks">
+                    <div class="stage-tick"></div>
+                    <div class="stage-tick"></div>
+                    <div class="stage-tick"></div>
+                    <div class="stage-tick"></div>
+                    <div class="stage-tick"></div>
+                    <div class="stage-tick"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="timer-info-card">
+                <div class="tinfo-ico">💡</div>
+                <div class="tinfo-txt" id="tip-txt">변의가 느껴질 때만 앉으세요!</div>
+              </div>
+
+              <button class="btn-stop-ios" onclick="stopTimer()">
+                <span>✅</span><span>끝났어요!</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ▶ CALENDAR PANEL -->
+        <div id="panel-calendar" class="panel">
+          <div class="app-header">
+            <div class="app-header-row">
+              <div class="app-title">달<span>력</span></div>
+            </div>
+          </div>
+          <div class="cal-section">
+            <div class="cal-nav">
+              <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+              <div class="cal-title" id="cal-title"></div>
+              <button class="cal-nav-btn" onclick="calNext()">›</button>
+            </div>
+            <div class="cal-grid" id="cal-hdr"></div>
+            <div class="cal-grid" style="margin-top:4px" id="cal-cells"></div>
+            <!-- Day detail -->
+            <div id="day-detail-panel"></div>
+          </div>
+        </div>
+
+        <!-- ▶ STATS PANEL -->
+        <div id="panel-stats" class="panel">
+          <div class="app-header">
+            <div class="app-header-row"><div class="app-title">통<span>계</span></div></div>
+          </div>
+          <div class="stats-section">
+            <div class="section-title">Overview</div>
+            <div class="stats-cards" id="s-cards"></div>
+            <div class="section-title">최근 7일</div>
+            <div class="chart-card-ios">
+              <div class="chart-title-ios">일평균 시간 (초)</div>
+              <div class="bar-row-ios" id="s-bars"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ▶ TIPS PANEL -->
+        <div id="panel-tips" class="panel">
+          <div class="app-header">
+            <div class="app-header-row"><div class="app-title">건강<span>팁</span></div></div>
+          </div>
+          <div class="tips-section">
+            <div class="section-title">Health Guide</div>
+            <div class="tip-card-ios"><div class="tip-icon-wrap" style="background:rgba(255,92,0,0.15)">⏱️</div><div><div class="tip-title-ios">화장실 시간</div><div class="tip-body-ios">배변은 1~2분이면 충분해요. 3분 이상 앉으면 항문 혈관에 압박이 가해져 치질 위험이 높아져요.</div></div></div>
+            <div class="tip-card-ios"><div class="tip-icon-wrap" style="background:rgba(0,194,255,0.12)">🚰</div><div><div class="tip-title-ios">수분 섭취</div><div class="tip-body-ios">하루 물 1.5~2L. 아침 공복에 따뜻한 물 한 잔이 장 운동을 활성화해요.</div></div></div>
+            <div class="tip-card-ios"><div class="tip-icon-wrap" style="background:rgba(0,230,118,0.12)">🥦</div><div><div class="tip-title-ios">식이섬유</div><div class="tip-body-ios">채소·과일·통곡물로 하루 25~30g. 변이 부드러워지고 배변이 쉬워져요.</div></div></div>
+            <div class="tip-card-ios"><div class="tip-icon-wrap" style="background:rgba(255,60,172,0.12)">📵</div><div><div class="tip-title-ios">스마트폰 금지</div><div class="tip-body-ios">화장실에서 스마트폰을 보면 시간이 훌쩍 지나가요. 잠깐 내려두세요!</div></div></div>
+            <div class="tip-card-ios"><div class="tip-icon-wrap" style="background:rgba(123,47,255,0.15)">🏥</div><div><div class="tip-title-ios">전문의 상담</div><div class="tip-body-ios">변에 피가 섞이거나 변비가 2주 이상 지속되면 대장항문과를 방문하세요.</div></div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-item active" onclick="switchTab('timer',this)">
+          <span class="tab-ico">🚽</span><span>타이머</span>
+        </button>
+        <button class="tab-item" onclick="switchTab('calendar',this)">
+          <span class="tab-ico">📅</span><span>달력</span>
+        </button>
+        <button class="tab-item" onclick="switchTab('stats',this)">
+          <span class="tab-ico">📊</span><span>통계</span>
+        </button>
+        <button class="tab-item" onclick="switchTab('tips',this)">
+          <span class="tab-ico">💡</span><span>건강팁</span>
+        </button>
+      </div>
+
+      <!-- FLUSH SHEET -->
+      <div id="flush-overlay">
+        <div class="flush-dim"></div>
+        <div class="flush-sheet-ios">
+          <div class="sheet-handle-ios"></div>
+          <div class="result-hero">
+            <div class="result-emoji-big" id="r-emoji">💩</div>
+            <div class="result-title-big" id="r-title">수고했어요!</div>
+            <div class="result-sub-ios"   id="r-sub">오늘도 건강하게</div>
+            <div class="result-time-ios"  id="r-time">00:00</div>
+          </div>
+
+          <div class="toilet-flush-area">
+            <svg class="bowl-visual" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="90" cy="10" rx="80" ry="12" fill="#2a1f54"/>
+              <ellipse cx="90" cy="7"  rx="80" ry="12" fill="#32245e"/>
+              <ellipse cx="90" cy="4"  rx="60" ry="9"  fill="#1a1240"/>
+              <path d="M 12 7 Q 5 35 5 50 Q 5 60 90 60 Q 175 60 175 50 Q 175 35 168 7 Z" fill="#32245e"/>
+            </svg>
+            <div id="flush-water"></div>
+            <div id="flush-char-emoji">💩</div>
+            <div class="bubble-wrap" id="bubble-wrap"></div>
+          </div>
+
+          <div class="flush-divider"></div>
+          <div class="record-form-ios">
+            <div class="form-label-ios">변 형태 (Bristol Scale)</div>
+            <div class="bristol-row-ios" id="b-row"></div>
+            <div class="bristol-desc-ios" id="b-desc"></div>
+            <div class="form-label-ios">변 색상</div>
+            <div class="color-row-ios" id="c-row"></div>
+            <textarea class="flush-textarea" id="note-ta" placeholder="메모 (선택)..."></textarea>
+            <button class="btn-flush-ios" id="btn-flush" onclick="doFlush()">💦 물 내리기!</button>
+            <button class="btn-done-ios"  id="btn-done"  onclick="closeSheet()">✅ 기록 완료!</button>
+          </div>
+          <div class="safe-bottom"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════ DATA ════════════════════════════════════════════ */
+const STAGES=[
+  {t:0,   key:'SAFE',    c:'#00E676',bg:'rgba(0,230,118,0.07)',   lbl:'쾌적해요 😊',      face:'happy',  sw:0,shk:false,stm:false,ph:true},
+  {t:60,  key:'OKAY',    c:'#FFD600',bg:'rgba(255,214,0,0.07)',   lbl:'괜찮아요 🙂',      face:'slight', sw:0,shk:false,stm:false,ph:true},
+  {t:120, key:'CAUTION', c:'#FF8C00',bg:'rgba(255,140,0,0.09)',   lbl:'슬슬 위험해요 😐', face:'neutral',sw:1,shk:false,stm:false,ph:false},
+  {t:180, key:'WARNING', c:'#FF5C00',bg:'rgba(255,92,0,0.1)',     lbl:'위험해요! 😰',     face:'worry',  sw:2,shk:false,stm:true, ph:false},
+  {t:300, key:'DANGER',  c:'#FF3CAC',bg:'rgba(255,60,172,0.12)', lbl:'🚨 치질 위험!',   face:'panic',  sw:3,shk:true, stm:true, ph:false},
+  {t:420, key:'CRITICAL',c:'#7B2FFF',bg:'rgba(123,47,255,0.14)', lbl:'☠️ 즉시 일어나!', face:'dead',   sw:3,shk:true, stm:true, ph:false},
+];
+const BRISTOL=[
+  {id:1,e:'🪨',l:'1형',d:'딱딱한 덩어리',c:'#92400e'},
+  {id:2,e:'🫘',l:'2형',d:'소시지형 딱딱',c:'#a16207'},
+  {id:3,e:'🌭',l:'3형',d:'균열 있는 소시지',c:'#b45309'},
+  {id:4,e:'🍌',l:'4형',d:'매끈한 소시지',c:'#16a34a'},
+  {id:5,e:'🫐',l:'5형',d:'부드러운 덩어리',c:'#ca8a04'},
+  {id:6,e:'💧',l:'6형',d:'흐릿한 조각',c:'#d97706'},
+  {id:7,e:'🌊',l:'7형',d:'완전 액체',c:'#dc2626'},
+];
+const COLORS=[
+  {id:'brown',h:'#7c4b2a'},{id:'yellow',h:'#a37c00'},{id:'green',h:'#166534'},
+  {id:'black',h:'#111827'},{id:'red',h:'#991b1b'},{id:'white',h:'#6b7280'},
+];
+const TIPS=[
+  '변의가 느껴질 때만 앉으세요!',
+  '하루 물 2L 이상, 아침 공복이 최고예요.',
+  '발을 약간 높이면 배변이 더 쉬워져요 🦶',
+  '식이섬유 풍부한 채소·과일을 드세요.',
+  '스마트폰을 내려두면 시간이 짧아져요 📵',
+  '3분 이상이면 치질 위험이 높아져요!',
+];
+
+let elapsed=0,running=false,iv=null,lastWarn=0,tipI=0,tipTm=null;
+let records=[],selB=4,selC='brown',calY,calM,selCalDate=null;
+let lastSw=-1,lastStm=null,flushed=false,bubIv=null;
+
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+const today=()=>new Date().toISOString().slice(0,10);
+const NS='http://www.w3.org/2000/svg';
+const getStage=()=>STAGES.reduce((a,s)=>elapsed>=s.t?s:a,STAGES[0]);
+
+/* DEMO DATA */
+function seedDemoData(){
+  const days=[-1,-1,-2,-2,-3,-4,-5,-6];
+  const elapseds=[95,180,65,320,110,88,240,400];
+  const bristols=[4,3,4,2,4,5,3,1];
+  const colors=['brown','brown','yellow','brown','green','brown','brown','black'];
+  days.forEach((d,i)=>{
+    const dt=new Date();dt.setDate(dt.getDate()+d);
+    const h=8+Math.floor(Math.random()*10);
+    const m=Math.floor(Math.random()*60);
+    dt.setHours(h,m,0,0);
+    records.push({
+      elapsed:elapseds[i],bristolId:bristols[i],colorId:colors[i],
+      note:'',ts:dt.toISOString(),
+      date:dt.toISOString().slice(0,10),
+      time:dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})
+    });
+  });
+  updateCounts();
+}
+
+function updateClock(){
+  const d=new Date();
+  document.getElementById('status-clock').textContent=
+    `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+setInterval(updateClock,10000);updateClock();
+
+/* ════ CHAR ═════════════════════════════════════════════ */
+function setBodyColor(c){
+  ['cb0','cb1','cb2','cb3','leg-l','leg-r','foot-l','foot-r','arm-l','arm-r','hand-l','hand-r','fkl','fkr'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.setAttribute('fill',c);el.style.fill=c;}
+  });
+  const swirl2=document.getElementById('swirl2');
+  if(swirl2) swirl2.setAttribute('stroke',`rgba(0,0,0,0.18)`);
+}
+function setFace(face){
+  ['m-happy','m-slight','m-neutral','m-worry','m-panic','m-dead'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  const dead=face==='dead';
+  document.getElementById('eyes-normal').style.display=dead?'none':'';
+  document.getElementById('eyes-dead').style.display=dead?'':'none';
+  const bw=document.getElementById('brows-w');
+  if(bw)bw.style.display=(face==='worry'||face==='panic')?'':'none';
+  const bl=document.getElementById('blush-l'),br=document.getElementById('blush-r');
+  if(bl)bl.style.opacity=face==='happy'?'1':'0';
+  if(br)br.style.opacity=face==='happy'?'1':'0';
+  const m=document.getElementById('m-'+face);
+  if(m)m.style.display='';
+}
+function updateChar(){
+  const s=getStage();
+  setBodyColor(s.c);setFace(s.face);
+  const pp=document.getElementById('phone-prop');
+  pp.style.opacity=s.ph?'1':'0';pp.style.transition='opacity .6s';
+  const cg=document.getElementById('char-g');
+  cg.style.animation=s.shk?'char-shake .18s linear infinite':'char-bob 2.5s ease-in-out infinite';
+  const aura=document.getElementById('c-aura');
+  if(s.shk){
+    aura.setAttribute('stroke',s.c);aura.setAttribute('stroke-width','4');
+    aura.style.opacity='.3';aura.style.animation='breathe-ring 1s ease infinite';
+  } else {
+    aura.setAttribute('stroke-width','0');aura.style.opacity='0';aura.style.animation='none';
+  }
+  if(lastSw!==s.sw){
+    lastSw=s.sw;
+    const sg=document.getElementById('sweat-g');sg.innerHTML='';
+    for(let i=0;i<s.sw;i++){
+      const el=document.createElementNS(NS,'ellipse');
+      el.setAttribute('cx',152+i*14);el.setAttribute('cy',66+i*12);
+      el.setAttribute('rx','5');el.setAttribute('ry','7');
+      el.setAttribute('fill','#93c5fd');
+      el.style.animation=`sweat-drop 1.2s ease-in ${i*0.38}s infinite`;
+      sg.appendChild(el);
+    }
+  }
+  if(lastStm!==s.stm){
+    lastStm=s.stm;
+    const stg=document.getElementById('steam-g');stg.innerHTML='';
+    if(s.stm){
+      for(let i=0;i<5;i++){
+        const el=document.createElementNS(NS,'rect');
+        el.setAttribute('x',76+i*10);el.setAttribute('y','32');
+        el.setAttribute('width','8');el.setAttribute('height','20');el.setAttribute('rx','4');
+        el.setAttribute('fill',i<2?'rgba(255,92,0,0.55)':'rgba(255,60,172,0.5)');
+        el.style.animation=`steam-rise 1s ease-out ${i*0.22}s infinite`;
+        stg.appendChild(el);
+      }
+    }
+  }
+}
+
+/* ════ TIMER UI ═════════════════════════════════════════ */
+function updateUI(){
+  const s=getStage();
+  document.getElementById('t-big').textContent=fmt(elapsed);
+  document.getElementById('t-big').style.color=s.c;
+  document.getElementById('t-lbl').textContent=s.lbl;
+  document.getElementById('t-lbl').style.color=s.c;
+  document.getElementById('stage-pill').style.background=s.bg;
+  document.getElementById('stage-pill').style.color=s.c;
+  document.getElementById('stage-pill').style.borderColor=`${s.c}40`;
+  document.getElementById('stage-pill-dot').style.background=s.c;
+  document.getElementById('stage-pill-dot').style.boxShadow=`0 0 6px ${s.c}`;
+  document.getElementById('stage-pill-txt').textContent=s.key;
+  document.getElementById('char-card-bg').style.background=`radial-gradient(ellipse 80% 50% at 50% 0%, ${s.bg} 0%, transparent 70%)`;
+  const pct=Math.min(elapsed/420*100,100);
+  const pf=document.getElementById('prog-fill');
+  pf.style.width=pct+'%';
+  const gc=pct>71?'#7B2FFF':pct>57?'#FF3CAC':pct>42?'#FF5C00':pct>28?'#FF8C00':pct>14?'#FFD600':'#00E676';
+  pf.style.background=`linear-gradient(to right, #00E676, ${gc})`;
+  pf.style.color=gc;
+  document.querySelectorAll('.stage-tick').forEach((tk,i)=>{
+    const active=elapsed>=STAGES[i].t;
+    tk.style.background=active?STAGES[i].c:'rgba(255,255,255,0.08)';
+    tk.style.boxShadow=active?`0 0 8px ${STAGES[i].c}`:'none';
+    tk.style.opacity=active?'1':'0.4';
+  });
+}
+
+/* ════ TIMER CONTROL ════════════════════════════════════ */
+function startTimer(){
+  document.getElementById('idle-view').style.display='none';
+  document.getElementById('timer-view').style.display='block';
+  document.getElementById('today-n2').textContent=document.getElementById('today-n').textContent;
+  elapsed=0;lastWarn=0;lastSw=-1;lastStm=null;flushed=false;
+  running=true;clearInterval(iv);
+  iv=setInterval(()=>{elapsed++;updateUI();updateChar();checkWarn();},1000);
+  rotateTip();updateUI();updateChar();
+}
+function stopTimer(){
+  running=false;clearInterval(iv);
+  if(tipTm){clearTimeout(tipTm);tipTm=null;}
+  openSheet();
+}
+function checkWarn(){
+  const W=[
+    {t:180,m:'⚠️ 3분 경과 — 항문 압력이 높아지고 있어요'},
+    {t:300,m:'🚨 5분 초과 — 치질 위험! 지금 바로 일어나세요!'},
+    {t:420,m:'☠️ 7분 이상 — 즉시 일어나세요!!'},
+  ];
+  const w=W.find(w=>elapsed===w.t&&lastWarn!==w.t);
+  if(!w)return;
+  lastWarn=w.t;
+  document.getElementById('warn-msg').textContent=w.m;
+  document.getElementById('warn-banner').classList.add('show');
+  setTimeout(()=>document.getElementById('warn-banner').classList.remove('show'),4500);
+}
+function rotateTip(){
+  document.getElementById('tip-txt').textContent=TIPS[tipI%TIPS.length];
+  tipI++;
+  if(tipTm)clearTimeout(tipTm);
+  tipTm=setTimeout(rotateTip,6000);
+}
+
+/* ════ SHEET ═════════════════════════════════════════════ */
+function openSheet(){
+  const s=getStage();flushed=false;
+  let em='💩',ti='수고했어요!',su='오늘도 건강하게';
+  if(elapsed<120){em='🌟';ti='완벽해요!';su='아주 건강한 시간이에요';}
+  else if(elapsed<300){em='😊';ti='괜찮아요!';su='적당한 시간이었어요';}
+  else if(elapsed<420){em='😰';ti='좀 길었어요';su='다음엔 더 빨리 일어나요';}
+  else{em='💀';ti='위험했어요!';su='치질 꼭 조심하세요';}
+  document.getElementById('r-emoji').textContent=em;
+  document.getElementById('r-title').textContent=ti;
+  document.getElementById('r-sub').textContent=su;
+  document.getElementById('r-time').textContent=fmt(elapsed);
+  document.getElementById('r-time').style.color=s.c;
+  document.getElementById('flush-char-emoji').textContent=em;
+  document.getElementById('flush-char-emoji').style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:44px;z-index:2;transition:all 1.4s cubic-bezier(.55,0,.45,1)';
+  document.getElementById('flush-water').style.height='0';
+  document.getElementById('btn-flush').style.display='flex';
+  document.getElementById('btn-flush').style.opacity='1';
+  document.getElementById('btn-flush').style.pointerEvents='';
+  document.getElementById('btn-flush').textContent='💦 물 내리기!';
+  document.getElementById('btn-done').style.display='none';
+  const br=document.getElementById('b-row');br.innerHTML='';
+  BRISTOL.forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='bristol-btn-ios'+(selB===b.id?' sel':'');
+    if(selB===b.id)btn.style.setProperty('--sel-c',b.c);
+    btn.innerHTML=`<span class="bb-ico">${b.e}</span>${b.l}`;
+    btn.onclick=()=>{
+      selB=b.id;
+      document.querySelectorAll('.bristol-btn-ios').forEach(x=>{x.classList.remove('sel');x.style.removeProperty('--sel-c');});
+      btn.classList.add('sel');btn.style.setProperty('--sel-c',b.c);
+      document.getElementById('b-desc').textContent=b.d;
+    };
+    br.appendChild(btn);
+  });
+  document.getElementById('b-desc').textContent=BRISTOL.find(b=>b.id===selB)?.d||'';
+  const cr=document.getElementById('c-row');cr.innerHTML='';
+  COLORS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='c-swatch'+(selC===c.id?' sel':'');
+    d.style.background=c.h;
+    d.onclick=()=>{selC=c.id;document.querySelectorAll('.c-swatch').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');};
+    cr.appendChild(d);
+  });
+  document.getElementById('note-ta').value='';
+  const ov=document.getElementById('flush-overlay');
+  ov.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.add('show')));
+}
+function doFlush(){
+  if(flushed)return;flushed=true;
+  const btn=document.getElementById('btn-flush');
+  btn.style.opacity='.5';btn.style.pointerEvents='none';btn.textContent='💦 물 내리는 중...';
+  document.getElementById('flush-water').style.height='90px';
+  startBubbles();
+  setTimeout(()=>{
+    const ch=document.getElementById('flush-char-emoji');
+    ch.style.transform='translateX(-50%) translateY(50px) rotate(540deg) scale(0.1)';ch.style.opacity='0';
+  },800);
+  setTimeout(()=>{document.getElementById('flush-water').style.height='0';stopBubbles();},2200);
+  setTimeout(()=>{btn.style.display='none';document.getElementById('btn-done').style.display='block';splashBurst();},2600);
+}
+function startBubbles(){
+  const wrap=document.getElementById('bubble-wrap');
+  bubIv=setInterval(()=>{
+    const b=document.createElement('div');const sz=4+Math.random()*10;
+    b.style.cssText=`position:absolute;width:${sz}px;height:${sz}px;border-radius:50%;border:1.5px solid rgba(0,194,255,0.7);background:rgba(0,194,255,0.1);left:${10+Math.random()*160}px;bottom:${5+Math.random()*15}px;animation:bubble-float ${0.7+Math.random()*0.5}s ease-out ${Math.random()*0.3}s forwards;pointer-events:none`;
+    wrap.appendChild(b);setTimeout(()=>b.remove(),1600);
+  },90);
+}
+function stopBubbles(){if(bubIv){clearInterval(bubIv);bubIv=null;}}
+function splashBurst(){
+  const wrap=document.getElementById('bubble-wrap');
+  for(let i=0;i<12;i++){
+    const b=document.createElement('div');const sz=10+Math.random()*14;
+    b.style.cssText=`position:absolute;width:${sz}px;height:${sz}px;border-radius:50%;border:2px solid rgba(0,194,255,0.9);left:${20+Math.random()*140}px;bottom:${15+Math.random()*50}px;animation:bubble-float .5s ease-out ${i*0.04}s forwards;pointer-events:none`;
+    wrap.appendChild(b);setTimeout(()=>b.remove(),800);
+  }
+}
+function closeSheet(){
+  const now=new Date();
+  records.unshift({
+    elapsed,bristolId:selB,colorId:selC,
+    note:document.getElementById('note-ta').value,
+    ts:now.toISOString(),date:today(),
+    time:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+  });
+  const ov=document.getElementById('flush-overlay');
+  ov.classList.remove('show');
+  setTimeout(()=>{ov.style.display='none';resetIdle();},500);
+  updateCounts();
+}
+function resetIdle(){
+  document.getElementById('idle-view').style.display='block';
+  document.getElementById('timer-view').style.display='none';
+  elapsed=0;lastSw=-1;lastStm=null;stopBubbles();
+}
+function updateCounts(){
+  const cnt=records.filter(r=>r.date===today()).length;
+  document.getElementById('today-n').textContent=cnt;
+  document.getElementById('today-n2').textContent=cnt;
+  const tot=records.length,avg=tot?Math.round(records.reduce((s,r)=>s+r.elapsed,0)/tot):0;
+  document.getElementById('qs-total').textContent=tot;
+  document.getElementById('qs-avg').textContent=fmt(avg);
+  document.getElementById('qs-safe').textContent=records.filter(r=>r.elapsed<180).length;
+}
+
+/* ════ TABS ══════════════════════════════════════════════ */
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('scroll-body').scrollTop=0;
+  if(name==='calendar')renderCal();
+  if(name==='stats')renderStats();
+}
+
+/* ════ CALENDAR ══════════════════════════════════════════ */
+function initCal(){const d=new Date();calY=d.getFullYear();calM=d.getMonth();}
+
+function calPrev(){calM--;if(calM<0){calM=11;calY--;}selCalDate=null;renderCal();}
+function calNext(){calM++;if(calM>11){calM=0;calY++;}selCalDate=null;renderCal();}
+
+function renderCal(){
+  document.getElementById('cal-title').textContent=`${calY}년 ${calM+1}월`;
+  document.getElementById('cal-hdr').innerHTML=['일','월','화','수','목','금','토'].map(d=>`<div class="cal-dname">${d}</div>`).join('');
+  const fd=new Date(calY,calM,1).getDay();
+  const days=new Date(calY,calM+1,0).getDate();
+  const now=new Date();
+  const dm={};
+  records.forEach(r=>{
+    const d=new Date(r.ts);
+    if(d.getFullYear()===calY&&d.getMonth()===calM){
+      const k=d.getDate();if(!dm[k])dm[k]=[];dm[k].push(r);
+    }
+  });
+  let h='';
+  for(let i=0;i<fd;i++)h+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=days;d++){
+    const rs=dm[d]||[];
+    const isT=now.getFullYear()===calY&&now.getMonth()===calM&&now.getDate()===d;
+    const danger=rs.some(r=>r.elapsed>=300);
+    const dateStr=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSel=selCalDate===dateStr;
+    let cls='cal-cell'+(isT?' today':rs.length?(danger?' has-danger':' has-ok'):'');
+    if(isSel)cls+=' selected';
+    h+=`<div class="${cls}" onclick="selectDay('${dateStr}')"><span>${d}</span>${rs.length?`<span class="cal-cnt">${rs.length}회</span>`:''}</div>`;
+  }
+  document.getElementById('cal-cells').innerHTML=h;
+  renderDayDetail();
+}
+
+function selectDay(dateStr){
+  selCalDate=selCalDate===dateStr?null:dateStr;
+  renderCal();
+}
+
+function renderDayDetail(){
+  const panel=document.getElementById('day-detail-panel');
+  if(!selCalDate){panel.innerHTML='';return;}
+  const rs=records.filter(r=>r.date===selCalDate);
+  const d=new Date(selCalDate+'T00:00:00');
+  const dStr=`${d.getMonth()+1}월 ${d.getDate()}일`;
+  const totalSec=rs.reduce((s,r)=>s+r.elapsed,0);
+  const avgSec=rs.length?Math.round(totalSec/rs.length):0;
+  let html=`<div class="day-detail">
+    <div class="day-detail-header">
+      <div class="day-detail-title">📋 ${dStr} — ${rs.length}회 / 총 ${fmt(totalSec)} / 평균 ${fmt(avgSec)}</div>
+    </div>`;
+  if(!rs.length){
+    html+=`<div class="day-detail-empty">기록 없음</div>`;
+  } else {
+    rs.forEach((r,i)=>{
+      const danger=r.elapsed>=300;
+      const warn=r.elapsed>=180&&r.elapsed<300;
+      const ok=r.elapsed<120;
+      const color=ok?'#00E676':warn?'#FF8C00':danger?'#FF3CAC':'#FFD600';
+      const numBg=ok?'#00A854':warn?'#D46000':danger?'#CC2280':'#C4A000';
+      const bristol=BRISTOL.find(b=>b.id===r.bristolId);
+      const colorInfo=COLORS.find(c=>c.id===r.colorId);
+      const badge1=bristol?`<span class="dr-badge" style="color:${bristol.c};border-color:${bristol.c}30;background:${bristol.c}15">${bristol.e} ${bristol.l}</span>`:'';
+      const badge2=colorInfo?`<span class="dr-badge" style="color:${colorInfo.h};border-color:${colorInfo.h}50;background:${colorInfo.h}18">● ${r.colorId}</span>`:'';
+      const noteStr=r.note?`<span class="dr-badge" style="color:var(--pp-muted)">📝 ${r.note.slice(0,12)}${r.note.length>12?'…':''}</span>`:'';
+      html+=`<div class="day-record-item">
+        <div class="dr-num" style="background:${numBg}">${i+1}</div>
+        <div class="dr-info">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="dr-time">${r.time}</span>
+            <span class="dr-duration" style="color:${color}">${fmt(r.elapsed)}</span>
+          </div>
+          <div class="dr-badges">${badge1}${badge2}${noteStr}</div>
+        </div>
+        <div class="dr-emoji">${ok?'✅':warn?'⚠️':danger?'🚨':'😐'}</div>
+      </div>`;
+    });
+  }
+  html+='</div>';
+  panel.innerHTML=html;
+}
+
+/* ════ STATS ═════════════════════════════════════════════ */
+function renderStats(){
+  const tot=records.length,avg=tot?Math.round(records.reduce((s,r)=>s+r.elapsed,0)/tot):0;
+  const danger=records.filter(r=>r.elapsed>=300).length;
+  const todayCnt=records.filter(r=>r.date===today()).length;
+  document.getElementById('s-cards').innerHTML=[
+    {l:'Total',v:tot+'회',c:'var(--pp-orange)'},
+    {l:'평균 시간',v:fmt(avg),c:'var(--pp-blue)'},
+    {l:'위험 횟수',v:danger+'회',c:'var(--pp-pink)'},
+    {l:'오늘',v:todayCnt+'회',c:'var(--pp-green)'},
+  ].map(x=>`<div class="stat-card-ios"><div class="sc-val" style="color:${x.c}">${x.v}</div><div class="sc-lbl">${x.l}</div></div>`).join('');
+  const days7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().slice(0,10);});
+  const bd=days7.map(iso=>{
+    const rs=records.filter(r=>r.date===iso);
+    const a=rs.length?Math.round(rs.reduce((s,r)=>s+r.elapsed,0)/rs.length):0;
+    const dd=new Date(iso);
+    return{l:`${dd.getMonth()+1}/${dd.getDate()}`,a,danger:rs.filter(r=>r.elapsed>=300).length};
+  });
+  const mx=Math.max(...bd.map(d=>d.a),60);
+  document.getElementById('s-bars').innerHTML=bd.map(d=>`
+    <div class="bar-col-ios">
+      <div class="bar-fill-ios" style="height:${d.a?Math.max((d.a/mx)*62,4):3}px;background:${d.danger?'linear-gradient(to top,#FF3CAC,#FF8C00)':d.a?'linear-gradient(to top,#00E676,#00C2FF)':'rgba(255,255,255,0.08)'}"></div>
+      <div class="bar-lbl-ios">${d.l}</div>
+    </div>`).join('');
+}
+
+/* ════ INIT ══════════════════════════════════════════════ */
+initCal();
+seedDemoData();
+</script>
+</body>
+</html>

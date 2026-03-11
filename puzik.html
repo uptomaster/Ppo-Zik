@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>뽀직이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ══ RESET & ROOT ══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --tile-bg:      #0e1117;
+  --tile-line:    #1a1f2e;
+  --tile-grout:   #141820;
+  --porcelain:    #f0eff0;
+  --porcelain-2:  #dddcde;
+  --steam-white:  rgba(240,239,240,0.06);
+  --neon-green:   #39ff9a;
+  --neon-yellow:  #ffe94d;
+  --neon-orange:  #ff8c42;
+  --neon-red:     #ff3b5c;
+  --neon-blue:    #38d9f5;
+  --brown-warm:   #c4884a;
+  --brown-dark:   #7a4f2a;
+  --text-dim:     #6b7280;
+  --text-mid:     #9ca3af;
+  --text-bright:  #e5e7eb;
+  --card-bg:      rgba(255,255,255,0.04);
+  --card-border:  rgba(255,255,255,0.08);
+  --glow-green:   0 0 20px rgba(57,255,154,0.35), 0 0 60px rgba(57,255,154,0.12);
+  --glow-yellow:  0 0 20px rgba(255,233,77,0.35), 0 0 60px rgba(255,233,77,0.12);
+  --glow-orange:  0 0 20px rgba(255,140,66,0.4),  0 0 60px rgba(255,140,66,0.15);
+  --glow-red:     0 0 20px rgba(255,59,92,0.5),   0 0 60px rgba(255,59,92,0.2);
+  --glow-blue:    0 0 20px rgba(56,217,245,0.35), 0 0 60px rgba(56,217,245,0.12);
+  --accent:       var(--neon-green);
+  --accent-glow:  var(--glow-green);
+}
+
+html, body {
+  height: 100%;
+  background: var(--tile-bg);
+  font-family: 'Nunito', sans-serif;
+  color: var(--text-bright);
+  overflow: hidden;
+}
+
+/* ══ TILE BACKGROUND ═══════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(var(--tile-grout) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tile-grout) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.5;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(57,255,154,0.04) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 40% at 100% 100%, rgba(56,217,245,0.03) 0%, transparent 50%);
+}
+
+/* ══ APP SHELL ═════════════════════════════════════════ */
+#app {
+  position: fixed; inset: 0; z-index: 1;
+  max-width: 430px; margin: 0 auto;
+  display: flex; flex-direction: column;
+  background: transparent;
+  overflow: hidden;
+}
+
+/* ══ HEADER ════════════════════════════════════════════ */
+.hdr {
+  flex-shrink: 0;
+  padding: 52px 20px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+  background: rgba(14,17,23,0.7);
+  position: relative; z-index: 10;
+}
+.hdr-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.hdr-logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--brown-dark), var(--brown-warm));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 12px rgba(196,136,74,0.4);
+}
+.hdr-title { font-size: 20px; font-weight: 900; letter-spacing: -0.03em; color: var(--porcelain); }
+.hdr-sub   { font-size: 10px; color: var(--text-dim); letter-spacing: 0.04em; margin-top: 1px; }
+.hdr-badge {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11px; font-weight: 800;
+  color: var(--text-mid);
+}
+.hdr-badge span { color: var(--neon-green); }
+
+/* ══ SCROLL BODY ═══════════════════════════════════════ */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 80px;
+}
+.body::-webkit-scrollbar { display: none; }
+
+/* ══ PANELS ════════════════════════════════════════════ */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ══ IDLE VIEW ═════════════════════════════════════════ */
+.idle-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 24px 0;
+  gap: 0;
+}
+.idle-toilet-wrap {
+  position: relative;
+  width: 200px; height: 200px;
+  display: flex; align-items: center; justify-content: center;
+}
+.idle-toilet-glow {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(57,255,154,0.08) 0%, transparent 70%);
+  animation: breathe 4s ease-in-out infinite;
+}
+.idle-toilet-emoji {
+  font-size: 100px;
+  animation: float-idle 3.5s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(57,255,154,0.2));
+  position: relative; z-index: 1;
+}
+.idle-headline {
+  font-size: 26px; font-weight: 900;
+  color: var(--porcelain);
+  letter-spacing: -0.03em;
+  text-align: center;
+  margin-top: 24px;
+  line-height: 1.2;
+}
+.idle-headline em {
+  font-style: normal;
+  color: var(--neon-green);
+}
+.idle-body {
+  font-size: 14px; color: var(--text-dim);
+  text-align: center; line-height: 1.7;
+  margin-top: 10px;
+  max-width: 260px;
+}
+.idle-stats-row {
+  display: flex; gap: 10px;
+  margin-top: 28px; width: 100%;
+}
+.idle-stat {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.idle-stat-num { font-size: 22px; font-weight: 900; font-family: 'Space Mono', monospace; }
+.idle-stat-lbl { font-size: 10px; color: var(--text-dim); margin-top: 3px; font-weight: 700; letter-spacing: 0.05em; }
+
+/* ══ TIMER VIEW ════════════════════════════════════════ */
+.timer-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 20px;
+}
+
+/* Stage indicator strip */
+.stage-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 10px 0 4px;
+}
+.stage-dots {
+  display: flex; gap: 5px;
+}
+.sdot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--card-border);
+  transition: all .4s;
+}
+.sdot.active { transform: scale(1.4); }
+.stage-label {
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 0.06em;
+  transition: color .5s;
+}
+
+/* Main stage SVG */
+.stage-svg-wrap {
+  position: relative;
+  width: 100%; max-width: 340px;
+  margin: 0 auto;
+}
+
+/* Timer card */
+.timer-card {
+  width: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 16px 20px 14px;
+  margin-top: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .5s, box-shadow .5s;
+}
+.timer-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+  pointer-events: none;
+}
+.timer-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.timer-label-sm {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.timer-digits {
+  font-family: 'Space Mono', monospace;
+  font-size: 54px; font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transition: color .5s, text-shadow .5s;
+}
+.timer-status {
+  font-size: 14px; font-weight: 800;
+  margin-top: 4px;
+  transition: color .5s;
+}
+
+/* Progress bar */
+.prog-wrap {
+  margin-top: 12px; width: 100%;
+  height: 6px; border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  overflow: visible; position: relative;
+}
+.prog-track {
+  height: 100%; border-radius: 6px;
+  width: 0%;
+  transition: width 1s linear, background .5s;
+  position: relative;
+}
+.prog-track::after {
+  content: '';
+  position: absolute; right: -1px; top: 50%;
+  transform: translateY(-50%);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: inherit;
+  box-shadow: var(--accent-glow);
+  transition: box-shadow .5s;
+}
+.prog-labels {
+  display: flex; justify-content: space-between;
+  margin-top: 6px;
+}
+.prog-lbl { font-size: 9px; color: var(--text-dim); font-weight: 700; }
+
+/* Tip pill */
+.tip-pill {
+  width: 100%;
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 10px;
+}
+.tip-ico { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.tip-txt { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+
+/* ══ CTA BUTTON ════════════════════════════════════════ */
+.cta-area {
+  padding: 12px 20px 0;
+  width: 100%;
+}
+.btn-cta {
+  width: 100%; border: none; cursor: pointer;
+  border-radius: 18px;
+  padding: 18px 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 17px; font-weight: 900;
+  letter-spacing: 0.02em;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .12s, box-shadow .12s;
+  position: relative; overflow: hidden;
+}
+.btn-cta:active { transform: scale(.97); }
+.btn-cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+.btn-start-c {
+  background: linear-gradient(135deg, #1db96a, #0ea855);
+  color: white;
+  box-shadow: 0 4px 24px rgba(29,185,106,0.45), 0 0 0 1px rgba(29,185,106,0.3);
+}
+.btn-stop-c {
+  background: linear-gradient(135deg, #ff3b5c, #c0143c);
+  color: white;
+  box-shadow: 0 4px 24px rgba(255,59,92,0.45), 0 0 0 1px rgba(255,59,92,0.3);
+  display: none;
+}
+
+/* ══ WARNING BANNER ════════════════════════════════════ */
+#warning {
+  position: fixed; top: 0; left: 50%; z-index: 100;
+  transform: translateX(-50%) translateY(-120%);
+  width: 100%; max-width: 430px;
+  padding: 16px 20px;
+  background: #ff3b5c;
+  font-size: 13px; font-weight: 800;
+  text-align: center; color: white;
+  transition: transform .4s cubic-bezier(.22,1,.36,1);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+  letter-spacing: 0.02em;
+}
+#warning.show { transform: translateX(-50%) translateY(0); }
+
+/* ══ BOTTOM NAV ════════════════════════════════════════ */
+.nav {
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  z-index: 50;
+  display: flex;
+  background: rgba(14,17,23,0.92);
+  border-top: 1px solid var(--card-border);
+  backdrop-filter: blur(20px);
+  padding-bottom: env(safe-area-inset-bottom, 6px);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 0 8px;
+  border: none; background: none; cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 10px; font-weight: 700;
+  color: var(--text-dim);
+  transition: color .2s;
+  gap: 3px;
+  letter-spacing: 0.03em;
+}
+.nav-ico { font-size: 20px; line-height: 1; }
+.nav-btn.active { color: var(--neon-green); }
+.nav-btn.active .nav-ico { filter: drop-shadow(0 0 6px rgba(57,255,154,0.6)); }
+
+/* ══ CALENDAR ══════════════════════════════════════════ */
+.cal-wrap { padding: 16px 20px; }
+.cal-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.cal-nav-btn {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 6px 14px;
+  color: var(--text-bright); font-size: 18px; cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+}
+.cal-nav-title { font-size: 16px; font-weight: 900; color: var(--porcelain); }
+.cal-grid-hdr {
+  display: grid; grid-template-columns: repeat(7,1fr);
+  margin-bottom: 6px;
+}
+.cal-dname { text-align: center; font-size: 10px; font-weight: 800; color: var(--text-dim); letter-spacing: 0.05em; padding-bottom: 4px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+.cal-cell {
+  aspect-ratio: 1; border-radius: 10px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--card-bg);
+  border: 1px solid transparent;
+  font-size: 12px; font-weight: 700; color: var(--text-mid);
+  position: relative;
+}
+.cal-cell.today { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(57,255,154,0.2); }
+.cal-cell.has-ok { background: rgba(57,255,154,0.1); border-color: rgba(57,255,154,0.25); color: var(--neon-green); }
+.cal-cell.has-danger { background: rgba(255,59,92,0.1); border-color: rgba(255,59,92,0.25); color: var(--neon-red); }
+.cal-cnt { font-size: 8px; font-weight: 800; }
+
+/* ══ STATS ═════════════════════════════════════════════ */
+.stats-wrap { padding: 16px 20px; }
+.stats-section-title { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+.stats-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 16px; padding: 14px 16px;
+}
+.stat-card-val { font-size: 28px; font-weight: 900; font-family: 'Space Mono', monospace; line-height: 1; }
+.stat-card-lbl { font-size: 10px; font-weight: 700; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.04em; }
+.chart-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 16px; padding: 16px;
+  margin-bottom: 10px;
+}
+.chart-hdr { font-size: 12px; font-weight: 800; color: var(--text-mid); margin-bottom: 14px; letter-spacing: 0.04em; }
+.bar-row { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bar-fill { width: 100%; border-radius: 5px 5px 2px 2px; min-height: 3px; transition: height .6s cubic-bezier(.4,0,.2,1); }
+.bar-lbl { font-size: 9px; color: var(--text-dim); font-weight: 700; }
+
+/* ══ TIPS ══════════════════════════════════════════════ */
+.tips-wrap { padding: 16px 20px; }
+.tip-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 16px; padding: 16px;
+  margin-bottom: 10px; display: flex; gap: 12px;
+}
+.tip-card-ico { font-size: 24px; flex-shrink: 0; }
+.tip-card-title { font-size: 13px; font-weight: 900; color: var(--porcelain); margin-bottom: 5px; }
+.tip-card-body { font-size: 12px; color: var(--text-dim); line-height: 1.65; }
+
+/* ══ FLUSH MODAL ═══════════════════════════════════════ */
+#flush-modal {
+  display: none; position: fixed; inset: 0; z-index: 80;
+  align-items: flex-end; justify-content: center;
+  background: transparent;
+}
+#flush-modal.show { display: flex; }
+.flush-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background .4s;
+  backdrop-filter: blur(0px);
+  transition: background .4s, backdrop-filter .4s;
+}
+#flush-modal.show .flush-backdrop {
+  background: rgba(0,0,8,0.75);
+  backdrop-filter: blur(8px);
+}
+.flush-sheet {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 430px;
+  background: #0d1119;
+  border-radius: 28px 28px 0 0;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-left: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transform: translateY(100%);
+  transition: transform .5s cubic-bezier(.22,1,.36,1);
+  overflow: hidden;
+  max-height: 92vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#flush-modal.show .flush-sheet { transform: translateY(0); }
+.flush-sheet::-webkit-scrollbar { display: none; }
+
+/* Handle */
+.sheet-handle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.2);
+  margin: 12px auto 0;
+}
+
+/* Result hero */
+.flush-hero {
+  padding: 20px 24px 0;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  position: relative;
+}
+.flush-hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(56,217,245,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.flush-result-emoji {
+  font-size: 64px; line-height: 1;
+  position: relative; z-index: 1;
+  animation: result-pop .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+.flush-result-title {
+  font-size: 22px; font-weight: 900;
+  color: var(--porcelain);
+  letter-spacing: -0.03em;
+  margin-top: 10px; z-index: 1; position: relative;
+}
+.flush-result-sub {
+  font-size: 13px; color: var(--text-dim);
+  margin-top: 4px; z-index: 1; position: relative;
+}
+.flush-result-time {
+  font-family: 'Space Mono', monospace;
+  font-size: 36px; font-weight: 700;
+  margin-top: 8px; z-index: 1; position: relative;
+  transition: color .5s;
+}
+
+/* Toilet bowl animation */
+.toilet-anim-wrap {
+  width: 100%; height: 120px;
+  position: relative; overflow: hidden;
+  margin-top: 16px;
+}
+.toilet-bowl-visual {
+  position: absolute; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 200px; height: 70px;
+}
+.bowl-svg ellipse { transition: fill .5s; }
+#water-fill {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 160px; height: 0;
+  background: linear-gradient(180deg, rgba(56,217,245,0.5), rgba(29,107,185,0.8));
+  border-radius: 50% 50% 10px 10px;
+  transition: height 1.2s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+#water-fill::after {
+  content: '';
+  position: absolute; top: 0; left: -50%;
+  width: 200%; height: 100%;
+  background: repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.06) 20px, rgba(255,255,255,0.06) 40px);
+  animation: water-wave 2s linear infinite;
+}
+#char-in-flush {
+  position: absolute; top: 10px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 40px; line-height: 1;
+  z-index: 2;
+  transition: transform 1.2s cubic-bezier(.4,0,.6,1), opacity 1.2s;
+}
+.bubble-layer { position: absolute; inset: 0; pointer-events: none; }
+
+/* Divider */
+.flush-divider {
+  height: 1px; background: var(--card-border);
+  margin: 16px 0 0;
+}
+
+/* Record form */
+.record-form { padding: 16px 24px 0; }
+.form-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+.bristol-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+.bristol-btn {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 7px 3px;
+  border-radius: 12px;
+  border: 1.5px solid var(--card-border);
+  background: var(--card-bg);
+  cursor: pointer; font-family: 'Nunito', sans-serif;
+  font-size: 9px; font-weight: 800; color: var(--text-dim);
+  transition: all .15s;
+  gap: 2px;
+}
+.bristol-btn .bico { font-size: 20px; }
+.bristol-btn.sel { border-color: currentColor; }
+.bristol-desc-line { font-size: 11px; color: var(--text-dim); text-align: center; margin: 6px 0 12px; min-height: 16px; }
+.color-strip { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
+.c-dot {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2.5px solid transparent; cursor: pointer;
+  transition: all .15s;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.3);
+}
+.c-dot.sel { border-color: var(--neon-blue); box-shadow: 0 0 12px rgba(56,217,245,0.5), inset 0 0 0 2px rgba(0,0,0,0.3); transform: scale(1.15); }
+.flush-note {
+  width: 100%; padding: 11px 14px;
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 12px; resize: none; height: 52px;
+  font-size: 13px; outline: none; color: var(--text-bright);
+  font-family: 'Nunito', sans-serif;
+  margin-bottom: 12px;
+}
+.flush-note::placeholder { color: var(--text-dim); }
+
+/* Flush button */
+.btn-flush-action {
+  width: 100%; border: none; cursor: pointer;
+  border-radius: 16px; padding: 16px 0;
+  font-family: 'Nunito', sans-serif;
+  font-size: 17px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: linear-gradient(135deg, #1d6fb9, #38d9f5);
+  color: white;
+  box-shadow: 0 4px 24px rgba(56,217,245,0.35);
+  transition: transform .12s, box-shadow .12s, opacity .3s;
+  position: relative; overflow: hidden;
+}
+.btn-flush-action::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+}
+.btn-flush-action:active { transform: scale(.97); }
+.btn-flush-done {
+  display: none; width: 100%; border: none; cursor: pointer;
+  border-radius: 16px; padding: 16px 0; margin-top: 10px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 17px; font-weight: 900;
+  background: linear-gradient(135deg, #1db96a, #0ea855);
+  color: white; box-shadow: 0 4px 24px rgba(29,185,106,0.35);
+  transition: transform .12s;
+}
+.btn-flush-done:active { transform: scale(.97); }
+.bottom-safe { height: 24px; }
+
+/* ══ KEYFRAMES ══════════════════════════════════════════ */
+@keyframes breathe {
+  0%,100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+@keyframes float-idle {
+  0%,100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+@keyframes bob {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes shaky {
+  0%,100% { transform: rotate(0deg) translateX(0); }
+  20% { transform: rotate(-4deg) translateX(-3px); }
+  40% { transform: rotate(3deg) translateX(2px); }
+  60% { transform: rotate(-3deg) translateX(-2px); }
+  80% { transform: rotate(4deg) translateX(3px); }
+}
+@keyframes sweat-fall {
+  0% { opacity: 1; transform: translateY(0) scaleY(1); }
+  80% { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(22px) scaleY(1.4); }
+}
+@keyframes steam-curl {
+  0% { opacity: 0.7; transform: translateY(0) scaleX(1); }
+  100% { opacity: 0; transform: translateY(-24px) scaleX(2); }
+}
+@keyframes pulse-ring {
+  0%,100% { r: 50; opacity: 0.3; }
+  50% { r: 56; opacity: 0.08; }
+}
+@keyframes water-wave {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(40px); }
+}
+@keyframes result-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes bubble-up {
+  0% { transform: translateY(0) scale(1); opacity: 0.7; }
+  100% { transform: translateY(-70px) scale(1.5); opacity: 0; }
+}
+@keyframes flush-spiral {
+  0% { transform: translateX(-50%) translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(50px) rotate(720deg) scale(0.2); opacity: 0; }
+}
+@keyframes glow-pulse {
+  0%,100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+@keyframes tile-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- Warning -->
+<div id="warning"></div>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-logo-icon">💩</div>
+    <div>
+      <div class="hdr-title">뽀직이</div>
+      <div class="hdr-sub">BATHROOM HEALTH TRACKER</div>
+    </div>
+  </div>
+  <div class="hdr-badge">오늘 <span id="today-num">0</span>회</div>
+</div>
+
+<!-- Body -->
+<div class="body">
+
+  <!-- ▸ TIMER PANEL -->
+  <div id="panel-timer" class="panel active">
+
+    <!-- Idle -->
+    <div id="idle-view">
+      <div class="idle-wrap">
+        <div class="idle-toilet-wrap">
+          <div class="idle-toilet-glow"></div>
+          <div class="idle-toilet-emoji">🚽</div>
+        </div>
+        <div class="idle-headline">건강한 <em>화장실</em><br>습관의 시작</div>
+        <div class="idle-body">버튼을 누르면 뽀직이가 변기에 앉아요.<br>시간이 지날수록 점점 위험해져요!</div>
+        <div class="idle-stats-row" id="idle-stats">
+          <div class="idle-stat">
+            <div class="idle-stat-num" id="is-total" style="color:var(--neon-green)">0</div>
+            <div class="idle-stat-lbl">TOTAL</div>
+          </div>
+          <div class="idle-stat">
+            <div class="idle-stat-num" id="is-avg" style="color:var(--neon-blue)">0:00</div>
+            <div class="idle-stat-lbl">AVG TIME</div>
+          </div>
+          <div class="idle-stat">
+            <div class="idle-stat-num" id="is-danger" style="color:var(--neon-red)">0</div>
+            <div class="idle-stat-lbl">DANGER</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active timer -->
+    <div id="timer-view" style="display:none">
+      <div class="timer-wrap">
+
+        <!-- Stage dots -->
+        <div class="stage-strip">
+          <div class="stage-dots" id="stage-dots"></div>
+          <div class="stage-label" id="stage-label">SAFE</div>
+        </div>
+
+        <!-- SVG Character -->
+        <div class="stage-svg-wrap">
+          <svg id="char-svg" viewBox="0 0 340 300" width="100%" xmlns="http://www.w3.org/2000/svg">
+
+            <!-- background glow ring -->
+            <circle id="glow-ring" cx="170" cy="220" r="50" fill="none" stroke="#39ff9a" stroke-width="0" opacity="0"/>
+
+            <!-- ── TOILET ── -->
+            <!-- tank -->
+            <rect x="90" y="20" width="160" height="90" rx="14" fill="#1e2535"/>
+            <rect x="98" y="28" width="144" height="74" rx="9" fill="#252d3d"/>
+            <!-- tank sheen -->
+            <rect x="102" y="32" width="48" height="10" rx="5" fill="rgba(255,255,255,0.06)"/>
+            <!-- flush knob -->
+            <circle cx="216" cy="55" r="12" fill="#1a2030"/>
+            <circle cx="216" cy="55" r="8"  fill="#2e3a50"/>
+            <circle cx="216" cy="55" r="4"  fill="#38d9f5" opacity="0.8"/>
+            <!-- seat rim -->
+            <ellipse cx="170" cy="148" rx="110" ry="26" fill="#1e2535"/>
+            <ellipse cx="170" cy="142" rx="110" ry="26" fill="#252d3d"/>
+            <!-- seat hole inner shadow -->
+            <ellipse cx="170" cy="140" rx="85"  ry="19" fill="#141820"/>
+            <!-- bowl -->
+            <path d="M 70 142 Q 58 220 58 262 Q 58 310 170 310 Q 282 310 282 262 Q 282 220 270 142 Z" fill="#1e2535"/>
+            <path d="M 78 146 Q 68 220 68 260 Q 68 300 170 300 Q 272 300 272 260 Q 272 220 262 146 Z" fill="#252d3d"/>
+            <!-- bowl water shimmer -->
+            <ellipse cx="170" cy="272" rx="82" ry="18" fill="#38d9f5" opacity="0.12" id="bowl-shimmer"/>
+            <ellipse cx="170" cy="272" rx="60" ry="10" fill="#38d9f5" opacity="0.08"/>
+            <!-- base -->
+            <rect x="106" y="302" width="128" height="22" rx="9" fill="#1e2535"/>
+            <rect x="96"  y="318" width="148" height="10" rx="5" fill="#141820"/>
+
+            <!-- ── CHARACTER ── -->
+            <g id="char-g">
+              <!-- aura/danger ring -->
+              <circle id="char-aura" cx="170" cy="118" r="52" fill="none" stroke="transparent" stroke-width="0"/>
+
+              <!-- body -->
+              <ellipse id="cb0" cx="170" cy="124" rx="44" ry="34" fill="#c4884a"/>
+              <ellipse id="cb1" cx="170" cy="98"  rx="31" ry="26" fill="#c4884a"/>
+              <ellipse id="cb2" cx="170" cy="76"  rx="20" ry="17" fill="#c4884a"/>
+              <ellipse id="cb3" cx="170" cy="62"  rx="11" ry="10" fill="#c4884a"/>
+              <!-- highlight -->
+              <ellipse cx="155" cy="114" rx="11" ry="9" fill="rgba(255,255,255,0.15)"/>
+
+              <!-- legs dangling -->
+              <ellipse id="leg-l" cx="135" cy="147" rx="17" ry="9"  fill="#c4884a"/>
+              <ellipse id="leg-r" cx="205" cy="147" rx="17" ry="9"  fill="#c4884a"/>
+              <ellipse id="foot-l" cx="122" cy="160" rx="11" ry="6" fill="#c4884a"/>
+              <ellipse id="foot-r" cx="218" cy="160" rx="11" ry="6" fill="#c4884a"/>
+
+              <!-- phone -->
+              <g id="phone-g" opacity="1">
+                <rect x="188" y="84" width="30" height="42" rx="5" fill="#0f172a"/>
+                <rect x="190" y="86" width="26" height="36" rx="3" fill="#38d9f5" opacity="0.8"/>
+                <!-- screen content lines -->
+                <rect x="193" y="90" width="18" height="2" rx="1" fill="rgba(255,255,255,0.5)"/>
+                <rect x="193" y="95" width="14" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+                <rect x="193" y="100" width="16" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+                <rect x="192" y="118" width="20" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+              </g>
+
+              <!-- eyes normal -->
+              <g id="eyes-n">
+                <circle cx="158" cy="88" r="6.5" fill="#0f172a"/>
+                <circle cx="182" cy="88" r="6.5" fill="#0f172a"/>
+                <circle cx="160" cy="86" r="2.5" fill="white"/>
+                <circle cx="184" cy="86" r="2.5" fill="white"/>
+              </g>
+              <!-- worried brows -->
+              <g id="brows-g" style="display:none">
+                <line x1="150" y1="79" x2="166" y2="76" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+                <line x1="174" y1="76" x2="190" y2="79" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <!-- dead X eyes -->
+              <g id="eyes-d" style="display:none">
+                <text x="157" y="93" font-size="15" text-anchor="middle" fill="#0f172a" font-weight="900">✕</text>
+                <text x="183" y="93" font-size="15" text-anchor="middle" fill="#0f172a" font-weight="900">✕</text>
+              </g>
+
+              <!-- mouths -->
+              <path id="m-happy"   d="M 154 100 Q 170 113 186 100" stroke="#0f172a" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path id="m-slight"  d="M 156 100 Q 170 108 184 100" stroke="#0f172a" stroke-width="3" fill="none" stroke-linecap="round" style="display:none"/>
+              <line id="m-neutral" x1="157" y1="101" x2="183" y2="101" stroke="#0f172a" stroke-width="3" stroke-linecap="round" style="display:none"/>
+              <path id="m-worry"   d="M 154 105 Q 170  97 186 105" stroke="#0f172a" stroke-width="3" fill="none" stroke-linecap="round" style="display:none"/>
+              <path id="m-panic"   d="M 152 108 Q 170  97 188 108" stroke="#0f172a" stroke-width="3" fill="none" stroke-linecap="round" style="display:none"/>
+              <path id="m-dead"    d="M 153 104 L 159 100 L 165 104 L 171 100 L 177 104 L 183 100 L 189 104" stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round" style="display:none"/>
+
+              <!-- dynamic sweat & steam -->
+              <g id="sweat-g"></g>
+              <g id="steam-g"></g>
+            </g>
+
+          </svg>
+        </div>
+
+        <!-- Timer card -->
+        <div class="timer-card" id="timer-card">
+          <div class="timer-top">
+            <div class="timer-label-sm">ELAPSED TIME</div>
+            <div class="timer-label-sm" id="t-phase">PHASE 1</div>
+          </div>
+          <div class="timer-digits" id="t-digits">00:00</div>
+          <div class="timer-status" id="t-status">쾌적해요 😊</div>
+          <div class="prog-wrap">
+            <div class="prog-track" id="prog-track"></div>
+          </div>
+          <div class="prog-labels">
+            <span class="prog-lbl">0:00</span>
+            <span class="prog-lbl">1:00</span>
+            <span class="prog-lbl">3:00</span>
+            <span class="prog-lbl">5:00</span>
+            <span class="prog-lbl">7:00</span>
+          </div>
+        </div>
+
+        <!-- Tip -->
+        <div class="tip-pill" id="tip-pill">
+          <div class="tip-ico">💡</div>
+          <div class="tip-txt" id="tip-t">변의가 느껴질 때만 앉으세요!</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-area">
+      <button class="btn-cta btn-start-c" id="btn-start" onclick="startTimer()">
+        <span>🚽</span><span>변기에 앉았어요!</span>
+      </button>
+      <button class="btn-cta btn-stop-c" id="btn-stop" onclick="stopTimer()">
+        <span>✅</span><span>끝났어요!</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ▸ CALENDAR -->
+  <div id="panel-calendar" class="panel">
+    <div class="cal-wrap">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+        <div class="cal-nav-title" id="cal-title"></div>
+        <button class="cal-nav-btn" onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid-hdr" id="cal-hdr"></div>
+      <div class="cal-grid" id="cal-cells"></div>
+    </div>
+  </div>
+
+  <!-- ▸ STATS -->
+  <div id="panel-stats" class="panel">
+    <div class="stats-wrap">
+      <div class="stats-section-title">Overview</div>
+      <div class="stats-cards" id="s-cards"></div>
+      <div class="chart-card">
+        <div class="chart-hdr">7-DAY AVERAGE TIME</div>
+        <div class="bar-row" id="s-bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ TIPS -->
+  <div id="panel-tips" class="panel">
+    <div class="tips-wrap">
+      <div class="stats-section-title">Health Guide</div>
+      <div class="tip-card"><div class="tip-card-ico">⏱️</div><div><div class="tip-card-title">화장실 시간</div><div class="tip-card-body">배변은 1~2분이면 충분해요. 3분 이상 앉으면 항문 혈관에 압박이 가해져 치질·열상 위험이 높아져요.</div></div></div>
+      <div class="tip-card"><div class="tip-card-ico">🚰</div><div><div class="tip-card-title">수분 섭취</div><div class="tip-card-body">하루 물 1.5~2L를 마시면 변이 부드러워져요. 아침 공복 따뜻한 물 한 잔이 특히 효과적이에요.</div></div></div>
+      <div class="tip-card"><div class="tip-card-ico">🥦</div><div><div class="tip-card-title">식이섬유</div><div class="tip-card-body">채소·과일·통곡물로 하루 25~30g의 식이섬유를 섭취하면 장 운동이 활발해져요.</div></div></div>
+      <div class="tip-card"><div class="tip-card-ico">📵</div><div><div class="tip-card-title">스마트폰 금지</div><div class="tip-card-body">화장실에서 스마트폰을 쓰면 무의식적으로 오래 앉아 치질 위험이 커져요. 내려두세요!</div></div></div>
+      <div class="tip-card"><div class="tip-card-ico">🏥</div><div><div class="tip-card-title">전문의 상담</div><div class="tip-card-body">변에 피가 섞이거나 변비가 2주 이상 지속되면 대장항문과를 꼭 방문하세요.</div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom Nav -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="switchTab('timer',this)"><span class="nav-ico">🚽</span>타이머</button>
+  <button class="nav-btn" onclick="switchTab('calendar',this)"><span class="nav-ico">📅</span>달력</button>
+  <button class="nav-btn" onclick="switchTab('stats',this)"><span class="nav-ico">📊</span>통계</button>
+  <button class="nav-btn" onclick="switchTab('tips',this)"><span class="nav-ico">💡</span>건강팁</button>
+</nav>
+
+<!-- ════ FLUSH MODAL ════ -->
+<div id="flush-modal">
+  <div class="flush-backdrop" onclick="/* no close */"></div>
+  <div class="flush-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="flush-hero">
+      <div class="flush-hero-bg"></div>
+      <div class="flush-result-emoji" id="r-emoji">💩</div>
+      <div class="flush-result-title" id="r-title">수고했어요!</div>
+      <div class="flush-result-sub"   id="r-sub">오늘도 건강하게</div>
+      <div class="flush-result-time"  id="r-time">00:00</div>
+    </div>
+
+    <!-- toilet anim -->
+    <div class="toilet-anim-wrap">
+      <svg class="toilet-bowl-visual" viewBox="0 0 200 70" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="100" cy="10"  rx="90" ry="14" fill="#1e2535"/>
+        <ellipse cx="100" cy="7"   rx="90" ry="14" fill="#252d3d"/>
+        <ellipse cx="100" cy="5"   rx="68" ry="10" fill="#141820"/>
+        <path d="M 14 7 Q 6 40 6 58 Q 6 70 100 70 Q 194 70 194 58 Q 194 40 186 7 Z" fill="#252d3d"/>
+      </svg>
+      <div id="water-fill"></div>
+      <div id="char-in-flush">💩</div>
+      <div class="bubble-layer" id="bubble-layer"></div>
+    </div>
+
+    <div class="flush-divider"></div>
+
+    <div class="record-form">
+      <div class="form-label">변 형태 — Bristol Scale</div>
+      <div class="bristol-grid" id="b-grid"></div>
+      <div class="bristol-desc-line" id="b-desc"></div>
+
+      <div class="form-label">변 색상</div>
+      <div class="color-strip" id="c-strip"></div>
+
+      <textarea class="flush-note" id="flush-note" placeholder="메모 남기기..."></textarea>
+
+      <button class="btn-flush-action" id="btn-flush" onclick="triggerFlush()">
+        💦 물 내리기!
+      </button>
+      <button class="btn-flush-done" id="btn-done" onclick="closeFlush()">
+        ✅ 기록 완료!
+      </button>
+    </div>
+    <div class="bottom-safe"></div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+/* ════════════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════════════ */
+const STAGES = [
+  { time:0,   key:"SAFE",    color:"#39ff9a", glowVar:"--glow-green",  label:"쾌적해요 😊",      face:"happy",   sweat:0, shake:false, steam:false, phone:true  },
+  { time:60,  key:"OK",      color:"#b8f54a", glowVar:"--glow-green",  label:"괜찮아요 🙂",      face:"slight",  sweat:0, shake:false, steam:false, phone:true  },
+  { time:120, key:"CAUTION", color:"#ffe94d", glowVar:"--glow-yellow", label:"슬슬 위험해요 😐", face:"neutral", sweat:1, shake:false, steam:false, phone:false },
+  { time:180, key:"WARNING", color:"#ff8c42", glowVar:"--glow-orange", label:"위험해요! 😰",     face:"worry",   sweat:2, shake:false, steam:true,  phone:false },
+  { time:300, key:"DANGER",  color:"#ff3b5c", glowVar:"--glow-red",    label:"🚨 치질 위험!",   face:"panic",   sweat:3, shake:true,  steam:true,  phone:false },
+  { time:420, key:"CRITICAL",color:"#c0143c", glowVar:"--glow-red",    label:"☠️ 즉시 일어나!", face:"dead",    sweat:3, shake:true,  steam:true,  phone:false },
+];
+const BRISTOL = [
+  {id:1,e:"🪨",l:"1형",d:"딱딱한 덩어리",c:"#92400e"},
+  {id:2,e:"🫘",l:"2형",d:"소시지형 딱딱",c:"#a16207"},
+  {id:3,e:"🌭",l:"3형",d:"균열 있는 소시지",c:"#b45309"},
+  {id:4,e:"🍌",l:"4형",d:"매끈한 소시지",c:"#16a34a"},
+  {id:5,e:"🫐",l:"5형",d:"부드러운 덩어리",c:"#ca8a04"},
+  {id:6,e:"💧",l:"6형",d:"흐릿한 조각",c:"#d97706"},
+  {id:7,e:"🌊",l:"7형",d:"완전 액체",c:"#dc2626"},
+];
+const COLORS = [
+  {id:"brown",hex:"#7c4b2a"},{id:"yellow",hex:"#a37c00"},
+  {id:"green",hex:"#166534"},{id:"black",hex:"#111827"},
+  {id:"red",hex:"#991b1b"}, {id:"white",hex:"#cbd5e1"},
+];
+const TIPS = [
+  "변의가 느껴질 때만 앉으세요! 억지로 앉지 마세요.",
+  "하루 물 2L 이상 마시면 변비 예방에 좋아요.",
+  "발을 약간 높이면 더 자연스럽게 배변할 수 있어요 🦶",
+  "식이섬유 풍부한 채소·과일을 매일 드세요.",
+  "스마트폰을 내려두면 화장실 시간이 짧아져요 📵",
+  "3분 이상이면 치질·항문 찢어짐 위험이 올라가요.",
+];
+
+let elapsed=0, running=false, iv=null, lastWarn=0, tipI=0, tipIv=null;
+let records=[], selB=4, selC="brown", calY, calM;
+let lastSweat=-1, lastSteam=null, flushed=false, bubIv=null;
+
+const fmt = s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+const todayISO = ()=>new Date().toISOString().slice(0,10);
+const NS = "http://www.w3.org/2000/svg";
+
+function getStage(){ return STAGES.reduce((a,s)=>elapsed>=s.time?s:a,STAGES[0]); }
+
+/* ════════════════════════════════════════════════════
+   STAGE DOTS INIT
+════════════════════════════════════════════════════ */
+function initStageDots(){
+  const wrap = document.getElementById("stage-dots");
+  STAGES.forEach((s,i)=>{
+    const d = document.createElement("div");
+    d.className = "sdot";
+    d.id = `sdot-${i}`;
+    d.style.background = s.color;
+    d.style.opacity = "0.25";
+    wrap.appendChild(d);
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   CHARACTER UPDATE
+════════════════════════════════════════════════════ */
+function setBodyColor(c){
+  ["cb0","cb1","cb2","cb3","leg-l","leg-r","foot-l","foot-r"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.setAttribute("fill",c); el.style.fill=c; }
+  });
+}
+function setFace(face){
+  ["m-happy","m-slight","m-neutral","m-worry","m-panic","m-dead"].forEach(id=>{
+    document.getElementById(id).style.display="none";
+  });
+  const isDead = face==="dead";
+  document.getElementById("eyes-n").style.display = isDead?"none":"";
+  document.getElementById("eyes-d").style.display = isDead?"":"none";
+  document.getElementById("brows-g").style.display = (face==="worry"||face==="panic")?"":"none";
+  const m = document.getElementById("m-"+face);
+  if(m) m.style.display="";
+}
+
+function updateChar(){
+  const s = getStage();
+  setBodyColor(s.color);
+  setFace(s.face);
+
+  // phone
+  document.getElementById("phone-g").style.opacity = s.phone?"1":"0";
+  document.getElementById("phone-g").style.transition = "opacity .6s";
+
+  // animation
+  const cg = document.getElementById("char-g");
+  cg.style.animation = s.shake
+    ? "shaky .22s linear infinite"
+    : "bob 2.4s ease-in-out infinite";
+
+  // aura ring
+  const aura = document.getElementById("char-aura");
+  if(s.shake){
+    aura.setAttribute("stroke", s.color);
+    aura.setAttribute("stroke-width","3");
+    aura.style.opacity = "0.35";
+    aura.style.animation = "pulse-ring 1s ease infinite";
+  } else {
+    aura.setAttribute("stroke-width","0");
+    aura.style.opacity = "0";
+    aura.style.animation = "none";
+  }
+
+  // sweat drops (SVG circles)
+  if(lastSweat !== s.sweat){
+    lastSweat = s.sweat;
+    const sg = document.getElementById("sweat-g");
+    sg.innerHTML = "";
+    for(let i=0;i<s.sweat;i++){
+      const el = document.createElementNS(NS,"ellipse");
+      el.setAttribute("cx", 195+i*14);
+      el.setAttribute("cy", 72+i*10);
+      el.setAttribute("rx","4");
+      el.setAttribute("ry","6");
+      el.setAttribute("fill","#93c5fd");
+      el.style.animation=`sweat-fall 1.3s ease-in ${i*0.42}s infinite`;
+      sg.appendChild(el);
+    }
+  }
+
+  // steam
+  if(lastSteam !== s.steam){
+    lastSteam = s.steam;
+    const stg = document.getElementById("steam-g");
+    stg.innerHTML = "";
+    if(s.steam){
+      for(let i=0;i<4;i++){
+        const el = document.createElementNS(NS,"rect");
+        el.setAttribute("x", 138+i*14);
+        el.setAttribute("y","44");
+        el.setAttribute("width","7");
+        el.setAttribute("height","18");
+        el.setAttribute("rx","3");
+        el.setAttribute("fill", i<2?"#ff8c4299":"#ff3b5c88");
+        el.style.animation=`steam-curl 1.1s ease-out ${i*0.28}s infinite`;
+        stg.appendChild(el);
+      }
+    }
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   TIMER UI UPDATE
+════════════════════════════════════════════════════ */
+function updateTimerUI(){
+  const s = getStage();
+
+  // digits + status
+  document.getElementById("t-digits").textContent = fmt(elapsed);
+  document.getElementById("t-digits").style.color = s.color;
+  document.getElementById("t-digits").style.textShadow = `0 0 24px ${s.color}88, 0 0 48px ${s.color}33`;
+  document.getElementById("t-status").textContent = s.label;
+  document.getElementById("t-status").style.color = s.color;
+  document.getElementById("t-phase").textContent = s.key;
+  document.getElementById("t-phase").style.color = s.color;
+
+  // card border + glow
+  const card = document.getElementById("timer-card");
+  card.style.borderColor = s.color+"44";
+  card.style.boxShadow = `0 0 0 1px ${s.color}22, inset 0 0 40px ${s.color}08`;
+
+  // stage label
+  document.getElementById("stage-label").textContent = s.key;
+  document.getElementById("stage-label").style.color = s.color;
+
+  // stage dots
+  STAGES.forEach((st,i)=>{
+    const d = document.getElementById(`sdot-${i}`);
+    if(!d) return;
+    const isActive = elapsed >= st.time;
+    d.style.background = isActive ? st.color : "var(--card-border)";
+    d.style.opacity = isActive ? "1" : "0.2";
+    d.classList.toggle("active", st === s);
+    if(st === s) d.style.boxShadow = `0 0 8px ${st.color}`;
+    else d.style.boxShadow = "none";
+  });
+
+  // progress
+  const pct = Math.min(elapsed/420*100,100);
+  const pt = document.getElementById("prog-track");
+  pt.style.width = pct+"%";
+  pt.style.background = `linear-gradient(to right, #39ff9a, ${pct>71?"#ff3b5c":pct>42?"#ff8c42":"#ffe94d"})`;
+
+  // bg body tint
+  document.querySelector(".body").style.background =
+    elapsed>=420 ? "linear-gradient(180deg,#2a0010 0%,#0e1117 60%)" :
+    elapsed>=300 ? "linear-gradient(180deg,#2a0008 0%,transparent 40%)" :
+    elapsed>=180 ? "linear-gradient(180deg,#2a100008 0%,transparent 30%)" : "transparent";
+}
+
+/* ════════════════════════════════════════════════════
+   TIMER CONTROL
+════════════════════════════════════════════════════ */
+function startTimer(){
+  // switch views
+  document.getElementById("idle-view").style.display  = "none";
+  document.getElementById("timer-view").style.display = "block";
+  document.getElementById("btn-start").style.display  = "none";
+  document.getElementById("btn-stop").style.display   = "flex";
+
+  elapsed=0; lastWarn=0; lastSweat=-1; lastSteam=null; flushed=false;
+  running=true;
+  clearInterval(iv);
+  iv = setInterval(tick, 1000);
+  rotateTip();
+  updateTimerUI();
+  updateChar();
+}
+
+function stopTimer(){
+  running=false; clearInterval(iv);
+  if(tipIv){ clearTimeout(tipIv); tipIv=null; }
+  openFlushModal();
+}
+
+function tick(){
+  elapsed++;
+  updateTimerUI();
+  updateChar();
+  checkWarn();
+}
+
+function checkWarn(){
+  const W=[
+    {t:180, m:"⚠️ 3분 경과 — 항문 압력이 높아지고 있어요"},
+    {t:300, m:"🚨 5분 초과 — 치질 위험! 지금 바로 일어나세요!"},
+    {t:420, m:"☠️ 7분 이상 — 즉시 일어나세요!!"},
+  ];
+  const w = W.find(w=>elapsed===w.t&&lastWarn!==w.t);
+  if(!w) return;
+  lastWarn = w.t;
+  const el = document.getElementById("warning");
+  el.textContent = w.m;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"), 5000);
+}
+
+function rotateTip(){
+  document.getElementById("tip-t").textContent = TIPS[tipI%TIPS.length];
+  tipI++;
+  if(tipIv) clearTimeout(tipIv);
+  tipIv = setTimeout(rotateTip, 6000);
+}
+
+/* ════════════════════════════════════════════════════
+   FLUSH MODAL
+════════════════════════════════════════════════════ */
+function openFlushModal(){
+  const s = getStage();
+  flushed = false;
+
+  // result
+  let em="💩", ti="수고했어요!", su="오늘도 건강하게";
+  if(elapsed<120){ em="🌟"; ti="완벽해요!"; su="아주 건강한 시간이에요"; }
+  else if(elapsed<300){ em="😊"; ti="괜찮아요!"; su="적당한 시간이었어요"; }
+  else if(elapsed<420){ em="😰"; ti="좀 길었어요"; su="다음엔 더 빨리 일어나요"; }
+  else { em="💀"; ti="위험했어요!"; su="치질 정말 조심하세요"; }
+
+  document.getElementById("r-emoji").textContent = em;
+  document.getElementById("r-title").textContent = ti;
+  document.getElementById("r-sub").textContent = su;
+  document.getElementById("r-time").textContent = fmt(elapsed);
+  document.getElementById("r-time").style.color = s.color;
+  document.getElementById("r-time").style.textShadow = `0 0 20px ${s.color}88`;
+  document.getElementById("char-in-flush").textContent = em;
+  document.getElementById("char-in-flush").style.cssText = "";
+
+  // water reset
+  document.getElementById("water-fill").style.height = "0";
+
+  // buttons reset
+  document.getElementById("btn-flush").style.display  = "flex";
+  document.getElementById("btn-flush").style.opacity  = "1";
+  document.getElementById("btn-flush").style.pointerEvents = "";
+  document.getElementById("btn-flush").textContent = "💦 물 내리기!";
+  document.getElementById("btn-done").style.display = "none";
+
+  // bristol
+  const bg = document.getElementById("b-grid");
+  bg.innerHTML = "";
+  BRISTOL.forEach(b=>{
+    const btn = document.createElement("button");
+    btn.className = "bristol-btn" + (selB===b.id?" sel":"");
+    btn.style.color = selB===b.id ? b.c : "var(--text-dim)";
+    btn.innerHTML = `<span class="bico">${b.e}</span>${b.l}`;
+    btn.onclick = ()=>{
+      selB = b.id;
+      document.querySelectorAll(".bristol-btn").forEach(x=>{ x.classList.remove("sel"); x.style.color="var(--text-dim)"; });
+      btn.classList.add("sel"); btn.style.color = b.c;
+      document.getElementById("b-desc").textContent = b.d;
+    };
+    bg.appendChild(btn);
+  });
+  document.getElementById("b-desc").textContent = BRISTOL.find(b=>b.id===selB)?.d||"";
+
+  // colors
+  const cs = document.getElementById("c-strip");
+  cs.innerHTML = "";
+  COLORS.forEach(c=>{
+    const d = document.createElement("div");
+    d.className = "c-dot"+(selC===c.id?" sel":"");
+    d.style.background = c.hex;
+    d.onclick = ()=>{
+      selC = c.id;
+      document.querySelectorAll(".c-dot").forEach(x=>x.classList.remove("sel"));
+      d.classList.add("sel");
+    };
+    cs.appendChild(d);
+  });
+
+  document.getElementById("flush-note").value = "";
+
+  const modal = document.getElementById("flush-modal");
+  modal.style.display = "flex";
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>modal.classList.add("show"));
+  });
+}
+
+function triggerFlush(){
+  if(flushed) return;
+  flushed = true;
+
+  const btn = document.getElementById("btn-flush");
+  btn.style.opacity = "0.5";
+  btn.style.pointerEvents = "none";
+  btn.textContent = "💦 물 내리는 중...";
+
+  // water rise
+  document.getElementById("water-fill").style.height = "90px";
+
+  // bubbles
+  startBubbles();
+
+  // char flush spiral
+  setTimeout(()=>{
+    const ch = document.getElementById("char-in-flush");
+    ch.style.transition = "all 1.3s cubic-bezier(.55,0,.45,1)";
+    ch.style.transform = "translateX(-50%) translateY(40px) rotate(540deg) scale(0.15)";
+    ch.style.opacity = "0";
+  }, 800);
+
+  // water drain
+  setTimeout(()=>{
+    document.getElementById("water-fill").style.height = "0";
+    stopBubbles();
+  }, 2000);
+
+  // reveal done
+  setTimeout(()=>{
+    btn.style.display = "none";
+    document.getElementById("btn-done").style.display = "block";
+    addSplashes();
+  }, 2400);
+}
+
+function startBubbles(){
+  const layer = document.getElementById("bubble-layer");
+  bubIv = setInterval(()=>{
+    const b = document.createElement("div");
+    const sz = 5+Math.random()*12;
+    b.style.cssText = `
+      position:absolute;
+      width:${sz}px;height:${sz}px;
+      border-radius:50%;
+      border:1.5px solid rgba(56,217,245,0.6);
+      background:rgba(56,217,245,0.1);
+      left:${15+Math.random()*170}px;
+      bottom:${5+Math.random()*15}px;
+      animation:bubble-up ${0.8+Math.random()*0.6}s ease-out ${Math.random()*0.3}s forwards;
+      pointer-events:none;
+    `;
+    layer.appendChild(b);
+    setTimeout(()=>b.remove(), 1600);
+  }, 100);
+}
+function stopBubbles(){ if(bubIv){clearInterval(bubIv);bubIv=null;} }
+
+function addSplashes(){
+  const layer = document.getElementById("bubble-layer");
+  for(let i=0;i<8;i++){
+    const s = document.createElement("div");
+    s.style.cssText = `
+      position:absolute;
+      width:16px;height:16px;border-radius:50%;
+      border:2px solid #38d9f5;
+      left:${30+Math.random()*140}px;
+      bottom:${20+Math.random()*50}px;
+      animation:bubble-up .6s ease-out ${i*0.06}s forwards;
+    `;
+    layer.appendChild(s);
+    setTimeout(()=>s.remove(),1200);
+  }
+}
+
+function closeFlush(){
+  const now = new Date();
+  records.unshift({
+    elapsed, bristolId:selB, colorId:selC,
+    note: document.getElementById("flush-note").value,
+    ts: now.toISOString(),
+    date: now.toISOString().slice(0,10),
+    time: now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}),
+  });
+
+  const modal = document.getElementById("flush-modal");
+  modal.classList.remove("show");
+  setTimeout(()=>{ modal.style.display="none"; resetToIdle(); },500);
+
+  updateTodayCount();
+  updateIdleStats();
+}
+
+function resetToIdle(){
+  document.getElementById("idle-view").style.display  = "block";
+  document.getElementById("timer-view").style.display = "none";
+  document.getElementById("btn-start").style.display  = "flex";
+  document.getElementById("btn-stop").style.display   = "none";
+  document.querySelector(".body").style.background = "transparent";
+  elapsed=0; lastSweat=-1; lastSteam=null;
+  stopBubbles();
+}
+
+function updateTodayCount(){
+  const cnt = records.filter(r=>r.date===todayISO()).length;
+  document.getElementById("today-num").textContent = cnt;
+}
+
+function updateIdleStats(){
+  const total = records.length;
+  const avg   = total ? Math.round(records.reduce((s,r)=>s+r.elapsed,0)/total) : 0;
+  const danger= records.filter(r=>r.elapsed>=300).length;
+  document.getElementById("is-total").textContent  = total;
+  document.getElementById("is-avg").textContent    = fmt(avg);
+  document.getElementById("is-danger").textContent = danger;
+}
+
+/* ════════════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════════════ */
+function switchTab(name,btn){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("panel-"+name).classList.add("active");
+  btn.classList.add("active");
+  if(name==="calendar") renderCal();
+  if(name==="stats") renderStats();
+}
+
+/* ════════════════════════════════════════════════════
+   CALENDAR
+════════════════════════════════════════════════════ */
+function initCal(){ const d=new Date(); calY=d.getFullYear(); calM=d.getMonth(); }
+function calPrev(){ calM--; if(calM<0){calM=11;calY--;} renderCal(); }
+function calNext(){ calM++; if(calM>11){calM=0;calY++;} renderCal(); }
+function renderCal(){
+  document.getElementById("cal-title").textContent=`${calY}년 ${calM+1}월`;
+  document.getElementById("cal-hdr").innerHTML=["일","월","화","수","목","금","토"].map(d=>`<div class="cal-dname">${d}</div>`).join("");
+  const firstDay=new Date(calY,calM,1).getDay();
+  const days=new Date(calY,calM+1,0).getDate();
+  const today=new Date();
+  const dm={};
+  records.forEach(r=>{
+    const d=new Date(r.ts);
+    if(d.getFullYear()===calY&&d.getMonth()===calM){
+      const k=d.getDate(); if(!dm[k])dm[k]=[]; dm[k].push(r);
+    }
+  });
+  let h="";
+  for(let i=0;i<firstDay;i++) h+="<div></div>";
+  for(let d=1;d<=days;d++){
+    const rs=dm[d]||[];
+    const isToday=today.getFullYear()===calY&&today.getMonth()===calM&&today.getDate()===d;
+    const danger=rs.some(r=>r.elapsed>=300);
+    const cls="cal-cell"+(isToday?" today":rs.length?(danger?" has-danger":" has-ok"):"");
+    h+=`<div class="${cls}"><span>${d}</span>${rs.length?`<span class="cal-cnt">${rs.length}</span>`:""}</div>`;
+  }
+  document.getElementById("cal-cells").innerHTML=h;
+}
+
+/* ════════════════════════════════════════════════════
+   STATS
+════════════════════════════════════════════════════ */
+function renderStats(){
+  const total  = records.length;
+  const avg    = total?Math.round(records.reduce((s,r)=>s+r.elapsed,0)/total):0;
+  const danger = records.filter(r=>r.elapsed>=300).length;
+  const todayCnt = records.filter(r=>r.date===todayISO()).length;
+  document.getElementById("s-cards").innerHTML=[
+    {l:"TOTAL SESSIONS",v:total+"회",  c:"var(--neon-green)"},
+    {l:"AVERAGE TIME",   v:fmt(avg),   c:"var(--neon-blue)"},
+    {l:"DANGER COUNT",   v:danger+"회",c:"var(--neon-red)"},
+    {l:"TODAY",          v:todayCnt+"회",c:"var(--neon-yellow)"},
+  ].map(x=>`<div class="stat-card" style="border-color:${x.c}33">
+    <div class="stat-card-val" style="color:${x.c}">${x.v}</div>
+    <div class="stat-card-lbl">${x.l}</div>
+  </div>`).join("");
+
+  const days=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().slice(0,10);});
+  const bd=days.map(iso=>{
+    const rs=records.filter(r=>r.date===iso);
+    const a=rs.length?Math.round(rs.reduce((s,r)=>s+r.elapsed,0)/rs.length):0;
+    const dd=new Date(iso); return{l:`${dd.getMonth()+1}/${dd.getDate()}`,a,d:rs.filter(r=>r.elapsed>=300).length};
+  });
+  const mx=Math.max(...bd.map(d=>d.a),60);
+  document.getElementById("s-bars").innerHTML=bd.map(d=>`
+    <div class="bar-col">
+      <div class="bar-fill" style="height:${d.a?Math.max((d.a/mx)*68,4):3}px;background:${d.d?"linear-gradient(to top,#ff3b5c,#ff8c42)":d.a?"linear-gradient(to top,#39ff9a,#38d9f5)":"rgba(255,255,255,0.08)"}"></div>
+      <div class="bar-lbl">${d.l}</div>
+    </div>`).join("");
+}
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
+initCal();
+initStageDots();
+updateTodayCount();
+updateIdleStats();
+</script>
+</body>
+</html>
